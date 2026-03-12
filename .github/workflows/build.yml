@@ -5,6 +5,10 @@ jobs:
   build:
     runs-on: windows-latest
 
+    defaults:
+      run:
+        working-directory: client
+
     steps:
       - uses: actions/checkout@v4
 
@@ -16,13 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: ${{ github.workspace }}/client
 
       - name: Build Tauri
         run: npm run tauri build
-        working-directory: ${{ github.workspace }}/client
 
       - uses: actions/upload-artifact@v4
         with:
           name: cacabox-exe
-          path: ${{ github.workspace }}/client/src-tauri/target/release/bundle/
+          path: client/src-tauri/target/release/bundle/
