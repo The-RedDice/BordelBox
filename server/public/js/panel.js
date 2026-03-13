@@ -1,0 +1,151 @@
+/* ─── Cacabox Panel JS ──────────────────────────────────── */
+'use strict';
+
+const socket = io({ path: '/socket.io' });
+
+// ─── État ────────────────────────────────────────────────
+let connectedClients = [];
+
+// ─── Connexion Socket ────────────────────────────────────
+socket.on('connect', () => {
+  setConn(true);
+  log('Connecté au serveur', 'ok');
+});
+socket.on('disconnect', () => {
+  setConn(false);
+  log('Déconnecté du serveur', 'err');
+});
+socket.on('clients_update', (list) => {
+  connectedClients = list;
+  renderClients(list);
+});
+
+function setConn(ok) {
+  const dot   = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  dot.className = 'dot ' + (ok ? 'connected' : 'disconnected');
+  label.textContent = ok ? 'Connecté' : 'Déconnecté';
+}
+
+// ─── Rendu clients ───────────────────────────────────────
+function renderClients(list) {
+  const ul   = document.getElementById('client-list');
+  const pills = document.getElementById('target-pills');
+
+  ul.innerHTML = '';
+  pills.innerHTML = '';
+
+  if (list.length === 0) {
+    ul.innerHTML = '<li class="empty">Aucun client</li>';
+    return;
+  }
+
+  list.forEach(pseudo => {
+    // Sidebar
+    const li = document.createElement('li');
+    li.textContent = pseudo;
+    ul.appendChild(li);
+
+    // Radio pill
+    const label = document.createElement('label');
+    label.className = 'radio-pill';
+    label.innerHTML = `<input type="radio" name="target" value="${pseudo}"> ${pseudo}`;
+    pills.appendChild(label);
+  });
+}
+
+function getTarget() {
+  const checked = document.querySelector('input[name="target"]:checked');
+  return checked ? checked.value : 'all';
+}
+
+// ─── Actions ─────────────────────────────────────────────
+async function sendUrl() {
+  const url    = document.getElementById('url-input').value.trim();
+  const target = getTarget();
+  if (!url) return;
+
+  const wrap   = document.getElementById('url-progress');
+  const status = document.getElementById('url-status');
+  wrap.classList.remove('hidden');
+  status.textContent = 'Téléchargement en cours…';
+
+  try {
+    const res  = await api('POST', '/api/sendurl', { url, target });
+    status.textContent = 'Envoyé !';
+    log(`sendurl → ${target} : ${res.filename}`, 'ok');
+    document.getElementById('url-input').value = '';
+    setTimeout(() => wrap.classList.add('hidden'), 2000);
+  } catch (e) {
+    status.textContent = 'Erreur : ' + e.message;
+    log('sendurl error : ' + e.message, 'err');
+    setTimeout(() => wrap.classList.add('hidden'), 3000);
+  }
+}
+
+async function sendFile() {
+  const fileUrl  = document.getElementById('file-input').value.trim();
+  const fileType = document.getElementById('file-type').value;
+  const target   = getTarget();
+  if (!fileUrl) return;
+
+  try {
+    await api('POST', '/api/sendfile', { fileUrl, fileType, target });
+    log(`sendfile → ${target} : ${fileType}`, 'ok');
+    document.getElementById('file-input').value = '';
+  } catch (e) {
+    log('sendfile error : ' + e.message, 'err');
+  }
+}
+
+async function sendMessage() {
+  const text   = document.getElementById('msg-input').value.trim();
+  const target = getTarget();
+  if (!text) return;
+
+  try {
+    await api('POST', '/api/message', { text, target });
+    log(`message → ${target} : "${text}"`, 'ok');
+    document.getElementById('msg-input').value = '';
+  } catch (e) {
+    log('message error : ' + e.message, 'err');
+  }
+}
+
+// ─── Fetch helper ────────────────────────────────────────
+async function api(method, endpoint, body) {
+  const res = await fetch(endpoint, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+// ─── Log ─────────────────────────────────────────────────
+function log(msg, type = 'info') {
+  const ul = document.getElementById('log-list');
+  const li = document.createElement('li');
+  li.className = type;
+  const now = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+  li.innerHTML = `<span class="ts">${now}</span><span class="tag">[${type.toUpperCase()}]</span> ${msg}`;
+  ul.prepend(li);
+  if (ul.children.length > 100) ul.removeChild(ul.lastChild);
+}
+
+// ─── Init ────────────────────────────────────────────────
+(async () => {
+  try {
+    const { clients } = await api('GET', '/api/clients');
+    connectedClients = clients;
+    renderClients(clients);
+    log(`Panel chargé — ${clients.length} client(s) en ligne`, 'info');
+  } catch (_) {}
+})();
+
+// Enter key shortcuts
+document.getElementById('url-input') .addEventListener('keydown', e => e.key === 'Enter' && sendUrl());
+document.getElementById('file-input').addEventListener('keydown', e => e.key === 'Enter' && sendFile());
+document.getElementById('msg-input') .addEventListener('keydown', e => e.key === 'Enter' && sendMessage());

@@ -1,0 +1,25 @@
+# ─── Secrets ────────────────────────────────
+.env
+
+# ─── Dépendances Node ───────────────────────
+node_modules/
+package-lock.json
+
+# ─── Médias téléchargés ─────────────────────
+server/public/media/
+*.mp4
+*.mp3
+*.webm
+*.m4a
+
+# ─── Build Tauri ────────────────────────────
+client/src-tauri/target/
+
+# ─── Logs ───────────────────────────────────
+*.log
+npm-debug.log*
+
+# ─── OS ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

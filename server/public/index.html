@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cacabox — Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/panel/css/panel.css">
+</head>
+<body>
+  <div class="scanlines"></div>
+
+  <header>
+    <div class="logo">💩 <span>CACABOX</span></div>
+    <div class="status-bar">
+      <span class="dot" id="conn-dot"></span>
+      <span id="conn-label">Connexion…</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Sidebar clients -->
+    <aside class="sidebar">
+      <h2>CLIENTS EN LIGNE</h2>
+      <ul id="client-list"><li class="empty">Aucun client</li></ul>
+    </aside>
+
+    <!-- Actions -->
+    <section class="actions">
+
+      <!-- Sélecteur de cible -->
+      <div class="card" id="target-card">
+        <h3>🎯 Cible</h3>
+        <div class="target-row">
+          <label class="radio-pill">
+            <input type="radio" name="target" value="all" checked> Tous
+          </label>
+          <div id="target-pills"></div>
+        </div>
+      </div>
+
+      <!-- Envoyer URL -->
+      <div class="card">
+        <h3>🎬 Envoyer une URL</h3>
+        <div class="input-row">
+          <input type="url" id="url-input" placeholder="YouTube, TikTok…">
+          <button class="btn btn-primary" onclick="sendUrl()">Envoyer</button>
+        </div>
+        <div class="progress-wrap hidden" id="url-progress">
+          <div class="progress-bar" id="url-bar"></div>
+          <span id="url-status">Téléchargement…</span>
+        </div>
+      </div>
+
+      <!-- Envoyer fichier -->
+      <div class="card">
+        <h3>📎 Envoyer un fichier (URL CDN)</h3>
+        <div class="input-row">
+          <input type="url" id="file-input" placeholder="https://cdn.discordapp.com/…">
+          <select id="file-type">
+            <option value="image">Image</option>
+            <option value="audio">Audio</option>
+          </select>
+          <button class="btn btn-secondary" onclick="sendFile()">Envoyer</button>
+        </div>
+      </div>
+
+      <!-- Message texte -->
+      <div class="card">
+        <h3>💬 Message texte</h3>
+        <div class="input-row">
+          <input type="text" id="msg-input" placeholder="Ton message en GROS sur l'écran…" maxlength="200">
+          <button class="btn btn-danger" onclick="sendMessage()">Balancer</button>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="card log-card">
+        <h3>📟 Log</h3>
+        <ul id="log-list"></ul>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/panel/js/panel.js"></script>
+</body>
+</html>
