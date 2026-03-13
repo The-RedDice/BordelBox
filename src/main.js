@@ -5,7 +5,7 @@
 
 // ─── Config par défaut ────────────────────────────────────────────────────────
 
-let CONFIG = {
+export let CONFIG = {
   pseudo:    'unknown',
   serverUrl: 'http://localhost:3000',
   textSize:  8,    // vw
@@ -32,7 +32,7 @@ const muteBadge       = document.getElementById('mute-badge');
 
 // ─── Application de la config ─────────────────────────────────────────────────
 
-function applyConfig(cfg) {
+export function applyConfig(cfg) {
   if (typeof cfg === 'string') cfg = JSON.parse(cfg);
   CONFIG = { ...CONFIG, ...cfg };
 
@@ -239,18 +239,20 @@ function connectSocket() {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
-(async () => {
-  await loadConfig();
+if (typeof window !== 'undefined' && !window.__NODE_TEST__) {
+  (async () => {
+    await loadConfig();
 
-  if (!CONFIG.pseudo || CONFIG.pseudo === 'CHANGE_MOI') {
-    CONFIG.pseudo = 'pc_' + Math.random().toString(36).slice(2, 7);
-  }
+    if (!CONFIG.pseudo || CONFIG.pseudo === 'CHANGE_MOI') {
+      CONFIG.pseudo = 'pc_' + Math.random().toString(36).slice(2, 7);
+    }
 
-  await loadSocketIO().catch(() => {
-    console.error('[Cacabox] Socket.io introuvable. Serveur démarré ?');
-  });
+    await loadSocketIO().catch(() => {
+      console.error('[Cacabox] Socket.io introuvable. Serveur démarré ?');
+    });
 
-  await setupTauriEvents();
-  connectSocket();
-})();
+    await setupTauriEvents();
+    connectSocket();
+  })();
+}
 
