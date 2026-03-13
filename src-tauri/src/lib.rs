@@ -60,9 +60,7 @@ fn set_clickthrough(window: WebviewWindow, enabled: bool) {
 fn save_and_notify(app: AppHandle, config_json: String) -> Result<(), String> {
     let path = config_path()?;
     std::fs::write(&path, &config_json).map_err(|e| e.to_string())?;
-    if let Some(w) = app.get_webview_window("overlay") {
-        let _ = w.emit("config_updated", &config_json);
-    }
+    let _ = app.emit("config_updated", &config_json);
     Ok(())
 }
 
@@ -93,6 +91,15 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                if window.label() == "options" {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+            _ => {}
+        })
         .invoke_handler(tauri::generate_handler![
             set_clickthrough,
             save_and_notify,

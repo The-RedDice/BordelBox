@@ -106,9 +106,21 @@ io.on('connection', (socket) => {
       socket.disconnect();
       return;
     }
-    myPseudo = pseudo.trim().toLowerCase();
+    const newPseudo = pseudo.trim().toLowerCase();
 
-    // Si reconnexion : remplace l'ancienne socket
+    // Si le client change de pseudo, on supprime l'ancien
+    if (myPseudo && myPseudo !== newPseudo) {
+      const oldClient = clients.get(myPseudo);
+      // Supprime seulement si c'est bien CE socket qui possédait le pseudo
+      if (oldClient && oldClient.socketId === socket.id) {
+        clients.delete(myPseudo);
+        console.log(`[~] ${myPseudo} a changé son pseudo en ${newPseudo}`);
+      }
+    }
+
+    myPseudo = newPseudo;
+
+    // Si reconnexion ou nouveau pseudo : remplace ou crée l'entrée
     clients.set(myPseudo, { socketId: socket.id, busy: false });
     if (!queues.has(myPseudo)) queues.set(myPseudo, []);
 
@@ -126,7 +138,7 @@ io.on('connection', (socket) => {
   socket.on('media_ended', () => {
     if (!myPseudo) return;
     const client = clients.get(myPseudo);
-    if (client) {
+    if (client && client.socketId === socket.id) {
       client.busy = false;
       console.log(`[Queue] ${myPseudo} libre.`);
       flushQueue(myPseudo);
@@ -135,9 +147,13 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     if (myPseudo) {
-      clients.delete(myPseudo);
-      console.log(`[-] ${myPseudo} déconnecté`);
-      io.emit('clients_update', getClientList());
+      const client = clients.get(myPseudo);
+      // Ne supprime le client que si le socket déconnecté est bien le socket actif de ce pseudo
+      if (client && client.socketId === socket.id) {
+        clients.delete(myPseudo);
+        console.log(`[-] ${myPseudo} déconnecté`);
+        io.emit('clients_update', getClientList());
+      }
     }
   });
 });

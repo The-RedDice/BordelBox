@@ -195,10 +195,20 @@ async function setupTauriEvents() {
 
     // Mise à jour config depuis la fenêtre options
     await listen('config_updated', ({ payload }) => {
+      const oldUrl = CONFIG.serverUrl;
+      const oldPseudo = CONFIG.pseudo;
+
       applyConfig(payload);
-      // Reconnecter si serverUrl ou pseudo a changé
-      if (socket) socket.disconnect();
-      connectSocket();
+
+      if (oldUrl !== CONFIG.serverUrl) {
+        // L'URL a changé, il faut recréer le socket
+        if (socket) socket.disconnect();
+        connectSocket();
+      } else if (socket && oldPseudo !== CONFIG.pseudo) {
+        // Seul le pseudo a changé, on se ré-identifie sans déconnecter
+        console.log('[Cacabox] Nouveau pseudo:', CONFIG.pseudo);
+        socket.emit('identify', { pseudo: CONFIG.pseudo });
+      }
     });
 
     // Raccourci clavier : Ctrl+Shift+D → toggle overlay
