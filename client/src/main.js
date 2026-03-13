@@ -57,8 +57,7 @@ function applyConfig(cfg) {
 
 async function loadConfig() {
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
-    const raw = await invoke('load_config');
+    const raw = await window.__TAURI__.core.invoke('load_config');
     applyConfig(raw);
   } catch {
     // Fallback navigateur (mode dev)
@@ -92,6 +91,20 @@ function showItem(item) {
 
   const { type, payload } = item;
 
+  // On nettoie l'écran des éléments précédents, sauf si un audio TTS est déjà en route et qu'on le garde
+  if (!payload.ttsUrl || CONFIG.muted) {
+    hideAll();
+  } else {
+    // Si on a du TTS, on ne veut pas couper l'audioPlayer qui va suivre, mais on doit quand même
+    // cacher l'image/vidéo/texte précédent.
+    mediaContainer.classList.remove('visible');
+    messageContainer.classList.remove('visible');
+    mediaCaption.classList.remove('visible');
+    mediaCaption.textContent = '';
+    mediaVideo.src = ''; mediaVideo.pause();
+    mediaImage.src = '';
+  }
+
   // Afficher l'expéditeur Discord si présent
   if (payload.senderName) {
     senderName.textContent  = payload.senderName;
@@ -103,18 +116,14 @@ function showItem(item) {
   }
 
   // Si un son TTS est fourni, on le met en route via audioPlayer (seulement si non mute)
-  let ttsDuration = 0;
   if (payload.ttsUrl && !CONFIG.muted) {
     audioPlayer.src = payload.ttsUrl;
     audioPlayer.play().catch(() => {});
-    // On s'assure qu'on ne passe pas au média suivant avant la fin du TTS s'il est très long
-    // Cependant pour une vidéo, la vidéo dicte la fin. On gère ça dans chaque cas.
   }
 
   switch (type) {
 
     case 'media': {
-      if (!payload.ttsUrl || CONFIG.muted) hideAll(); // Do not stop the audioPlayer started above if playing TTS
       const src = `${CONFIG.serverUrl}/media/${payload.filename}`;
       mediaVideo.style.display = 'block';
       mediaImage.style.display = 'none';
@@ -140,7 +149,6 @@ function showItem(item) {
     }
 
     case 'file': {
-      if (!payload.ttsUrl || CONFIG.muted) hideAll();
       const { url, fileType } = payload;
 
       if (fileType === 'audio') {
@@ -181,7 +189,6 @@ function showItem(item) {
     }
 
     case 'message': {
-      if (!payload.ttsUrl || CONFIG.muted) hideAll();
       messageText.textContent = payload.text;
       messageText.style.animation = 'none';
       messageText.offsetHeight;
@@ -227,9 +234,9 @@ function hideAll() {
 
 async function setupTauriEvents() {
   try {
-    const { listen }  = await import('@tauri-apps/api/event');
-    const { invoke }  = await import('@tauri-apps/api/core');
-    const { register } = await import('@tauri-apps/plugin-global-shortcut');
+    const invoke = window.__TAURI__.core.invoke;
+    const listen = window.__TAURI__.event.listen;
+    const { register, unregister } = window.__TAURI__.globalShortcut;
 
     // Toggle mute depuis le tray
     await listen('toggle_mute', () => {
@@ -255,7 +262,6 @@ async function setupTauriEvents() {
 
       if (CONFIG.shortcut !== oldShortcut && CONFIG.shortcut) {
         try {
-          const { unregister, register } = await import('@tauri-apps/plugin-global-shortcut');
           await unregister(oldShortcut).catch(() => {});
           await register(CONFIG.shortcut, () => {
             overlayEnabled = !overlayEnabled;
@@ -296,8 +302,8 @@ async function setupTauriEvents() {
     // Click-through
     await invoke('set_clickthrough', { enabled: true });
 
-  } catch {
-    console.info('[Cacabox] Hors contexte Tauri');
+  } catch (err) {
+    console.info('[Cacabox] Erreur/Hors contexte Tauri:', err);
   }
 }
 

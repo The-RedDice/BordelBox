@@ -73,10 +73,7 @@ function flushQueue(pseudo) {
   client.busy = true;
   io.to(client.socketId).emit('show', item);
   console.log(`[Queue] → ${pseudo} : type=${item.type}`);
-  // Notify queue update if function is available
-  if (typeof module.exports.getQueueDataForEmitters === 'function') {
-    io.emit('queue_update', module.exports.getQueueDataForEmitters());
-  }
+  io.emit('queue_update', getQueueDataForEmitters());
 }
 
 /**
@@ -99,9 +96,7 @@ function enqueue(target, item) {
     flushQueue(target);
   }
 
-  if (typeof module.exports.getQueueDataForEmitters === 'function') {
-    io.emit('queue_update', module.exports.getQueueDataForEmitters());
-  }
+  io.emit('queue_update', getQueueDataForEmitters());
   return { ok: true };
 }
 
@@ -204,11 +199,7 @@ router.get('/clients', (_req, res) => {
   res.json({ clients: getClientList() });
 });
 
-// GET /api/tts/models — liste des modèles TTS
-router.get('/tts/models', (_req, res) => {
-  res.json({ models: getAvailableModels() });
-});
-
+// ─── Helpers internes partagés (Remontés pour accessibilité) ─────────────────
 function getQueueDataForEmitters() {
   const result = {};
   for (const [pseudo, q] of queues.entries()) {
@@ -216,7 +207,11 @@ function getQueueDataForEmitters() {
   }
   return result;
 }
-module.exports.getQueueDataForEmitters = getQueueDataForEmitters;
+
+// GET /api/tts/models — liste des modèles TTS
+router.get('/tts/models', (_req, res) => {
+  res.json({ models: getAvailableModels() });
+});
 
 // GET /api/queue — Récupérer toutes les queues
 router.get('/queue', (_req, res) => {
