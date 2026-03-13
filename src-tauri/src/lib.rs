@@ -6,7 +6,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Manager, WebviewWindow,
+    AppHandle, Emitter, Manager, WebviewWindow,
 };
 
 // ─── Win32 click-through ────────────────────────────────────────────────────
