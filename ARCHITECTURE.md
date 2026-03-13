@@ -6,6 +6,7 @@ cacabox/
 ├── .env.example                    ← Variables d'env à copier en .env
 ├── .gitignore
 ├── README.md
+├── package.json                    ← Scripts Tauri & dépendances JS
 │
 ├── server/                         ── 🖥️  SERVEUR NODE.JS
 │   ├── package.json
@@ -23,20 +24,19 @@ cacabox/
 │   ├── index.js                    ← Bot principal : Slash Commands + Rich Presence
 │   └── deploy-commands.js          ← Script d'enregistrement des commandes (1x)
 │
-└── client/                         ── 🪟  CLIENT TAURI (overlay)
-    ├── package.json
-    ├── src/
-    │   ├── index.html              ← Overlay HTML transparent
-    │   ├── main.js                 ← Logique Socket.io + affichage
-    │   └── config.json             ← Pseudo + URL serveur (éditer sur chaque PC)
-    └── src-tauri/
-        ├── Cargo.toml
-        ├── tauri.conf.json         ← Config fenêtre : transparent, alwaysOnTop
-        ├── capabilities/
-        │   └── default.json        ← Permissions Tauri v2
-        └── src/
-            ├── main.rs             ← Entry point Rust
-            └── lib.rs              ← Click-through Win32 + commande Tauri
+├── src/                            ── 🪟  CLIENT WEB (overlay)
+│   ├── index.html                  ← Overlay HTML transparent
+│   ├── main.js                     ← Logique Socket.io + affichage
+│   └── config.json                 ← Pseudo + URL serveur (éditer sur chaque PC)
+│
+└── src-tauri/                      ── 🦀  CLIENT TAURI (Rust bridge)
+    ├── Cargo.toml
+    ├── tauri.conf.json             ← Config fenêtre : transparent, alwaysOnTop
+    ├── capabilities/
+    │   └── default.json            ← Permissions Tauri v2
+    └── src/
+        ├── main.rs                 ← Entry point Rust
+        └── lib.rs                  ← Click-through Win32 + commande Tauri
 ```
 
 ## Flux de données

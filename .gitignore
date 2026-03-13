@@ -13,7 +13,7 @@ server/public/media/
 *.m4a
 
 # ─── Build Tauri ────────────────────────────
-client/src-tauri/target/
+src-tauri/target/
 
 # ─── Logs ───────────────────────────────────
 *.log
