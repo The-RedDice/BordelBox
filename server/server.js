@@ -52,6 +52,13 @@ app.use('/media', express.static(MEDIA_DIR));
 const clients = new Map();
 const queues  = new Map();
 
+// État des votes pour /voteskip
+const voteSkipState = {
+  active: false,
+  voters: new Set(),
+  requiredVotes: 0
+};
+
 // Historique des 100 derniers éléments joués/envoyés
 const historyLog = [];
 function addHistory(item, targetPseudo) {
@@ -75,6 +82,10 @@ function flushQueue(pseudo) {
 
   const queue = getQueue(pseudo);
   if (queue.length === 0) return;
+
+  // Réinitialiser les votes s'il s'agit d'un flush global (simplifié: dès qu'un nouvel item commence)
+  voteSkipState.active = false;
+  voteSkipState.voters.clear();
 
   const item = queue.shift();
   client.busy = true;
@@ -263,16 +274,35 @@ router.post('/sendurl', async (req, res) => {
   const { url, target = 'all', caption, senderName, avatarUrl, ttsVoice, greenscreen } = req.body;
   if (!url) return res.status(400).json({ error: 'url requis' });
 
+  let ttsUrl = '';
+  if (ttsVoice && caption) {
+    const ttsFilename = `tts_${Date.now()}.wav`;
+    const ttsOutPath = path.join(MEDIA_DIR, ttsFilename);
+    const generated = await generateTTS(caption, ttsVoice, ttsOutPath);
+    if (generated) ttsUrl = `${SERVER_URL}/media/${ttsFilename}`;
+  }
+
+  // Vérifier si l'URL est un fichier direct
+  const lowerUrl = url.toLowerCase();
+  const isDirectImage = lowerUrl.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)(\?.*)?$/);
+  const isDirectAudio = lowerUrl.match(/\.(mp3|wav|ogg|m4a|flac)(\?.*)?$/);
+  const isDirectVideo = lowerUrl.match(/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/);
+
+  if (isDirectImage || isDirectAudio || isDirectVideo) {
+    let fileType = 'image';
+    if (isDirectAudio) fileType = 'audio';
+    if (isDirectVideo) fileType = 'video';
+
+    const result = enqueue(target, {
+      type: 'file',
+      payload: { url, fileType, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen },
+    });
+    if (result?.error) return res.status(404).json(result);
+    return res.json({ ok: true, ttsUrl, directUrl: true });
+  }
+
   try {
     const media = await downloadMedia(url);
-
-    let ttsUrl = '';
-    if (ttsVoice && caption) {
-      const ttsFilename = `tts_${Date.now()}.wav`;
-      const ttsOutPath = path.join(MEDIA_DIR, ttsFilename);
-      const generated = await generateTTS(caption, ttsVoice, ttsOutPath);
-      if (generated) ttsUrl = `${SERVER_URL}/media/${ttsFilename}`;
-    }
 
     const result = enqueue(target, {
       type: 'media',
@@ -305,6 +335,48 @@ router.post('/sendfile', async (req, res) => {
   });
   if (result?.error) return res.status(404).json(result);
   res.json({ ok: true, ttsUrl });
+});
+
+// POST /api/voteskip
+router.post('/voteskip', (req, res) => {
+  const { voterId } = req.body;
+
+  if (clients.size === 0) {
+    return res.status(400).json({ error: 'Aucun client connecté pour skip.' });
+  }
+
+  // Activer le système de vote si c'est le premier vote pour le média en cours
+  if (!voteSkipState.active) {
+    voteSkipState.active = true;
+    voteSkipState.voters.clear();
+  }
+
+  // L'utilisateur vote (voterId sert à éviter qu'une même personne vote 10x)
+  if (voterId) {
+    voteSkipState.voters.add(voterId);
+  } else {
+    // Fallback: incrémentation basique si pas d'ID (bien qu'il y en aura un côté discord)
+    voteSkipState.voters.add(Date.now().toString());
+  }
+
+  const currentVotes = voteSkipState.voters.size;
+  // La moitié doit dire oui (arrondi au supérieur: sur 5 joueurs, il faut 3 votes)
+  const requiredVotes = Math.ceil(clients.size / 2);
+
+  if (currentVotes >= requiredVotes) {
+    // Déclenchement du SKIP !
+    console.log(`[VoteSkip] Seuil atteint (${currentVotes}/${requiredVotes}). Skiping current media...`);
+    io.emit('force_skip');
+
+    // On réinitialise l'état
+    voteSkipState.active = false;
+    voteSkipState.voters.clear();
+
+    // Le 'force_skip' côté client va déclencher 'media_ended' qui fera avancer la file
+    return res.json({ skipped: true, currentVotes, requiredVotes });
+  }
+
+  res.json({ skipped: false, currentVotes, requiredVotes });
 });
 
 // POST /api/message

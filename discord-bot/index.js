@@ -104,7 +104,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const avatarUrl  = interaction.user.displayAvatarURL({ size: 64, extension: 'png' });
 
         await interaction.editReply({
-          content: `⏳ Téléchargement de \`${url}\` en cours…`,
+          content: `⏳ Traitement de \`${url}\` en cours…`,
         });
 
         const data = await apiPost('/sendurl', { url, target, caption, senderName, avatarUrl, ttsVoice, greenscreen });
@@ -114,11 +114,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
           return;
         }
 
-        await interaction.editReply(
-          `✅ Vidéo envoyée à **${target === 'all' ? 'tout le monde' : target}** !\n` +
-          `📁 Fichier : \`${data.filename}\`` +
-          (caption ? `\n💬 Caption : "${caption}"` : '')
-        );
+        if (data.directUrl) {
+          await interaction.editReply(
+            `✅ Média envoyé à **${target === 'all' ? 'tout le monde' : target}** !\n` +
+            (caption ? `\n💬 Caption : "${caption}"` : '')
+          );
+        } else {
+          await interaction.editReply(
+            `✅ Vidéo envoyée à **${target === 'all' ? 'tout le monde' : target}** !\n` +
+            `📁 Fichier : \`${data.filename}\`` +
+            (caption ? `\n💬 Caption : "${caption}"` : '')
+          );
+        }
         updatePresence();
         break;
       }
@@ -176,6 +183,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.editReply(
           `💬 Message envoyé à **${target === 'all' ? 'tout le monde' : target}** :\n> ${text}`
         );
+        break;
+      }
+
+      // ── /voteskip ──────────────────────────────────────
+      case 'voteskip': {
+        const data = await apiPost('/voteskip', { voterId: interaction.user.id });
+
+        if (data.error) {
+          await interaction.editReply(`❌ Impossible de voter: ${data.error}`);
+          return;
+        }
+
+        if (data.skipped) {
+          await interaction.editReply(`⏭️ **Skipped !** (Vote atteint: ${data.currentVotes}/${data.requiredVotes})`);
+        } else {
+          await interaction.editReply(`🗳️ Vote enregistré : **${data.currentVotes}/${data.requiredVotes}** requis pour skip.`);
+        }
         break;
       }
 
