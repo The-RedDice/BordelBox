@@ -11,7 +11,7 @@ let CONFIG = {
   textSize:  8,    // vw
   mediaSize: 80,   // % écran
   muted:     false,
-  shortcut:  'Ctrl+Shift+D',
+  shortcut:  'Ctrl+O',
 };
 
 let overlayEnabled = true;
@@ -270,6 +270,7 @@ async function setupTauriEvents() {
       muteBadge.classList.toggle('visible', CONFIG.muted);
       if (mediaVideo.src) mediaVideo.muted = CONFIG.muted;
       invoke('save_and_notify', { configJson: JSON.stringify(CONFIG) }).catch(() => {});
+      invoke('update_tray_menu', { overlayEnabled, isMuted: CONFIG.muted }).catch(() => {});
     });
 
     // Toggle overlay depuis le tray
@@ -277,6 +278,7 @@ async function setupTauriEvents() {
       overlayEnabled = !overlayEnabled;
       if (!overlayEnabled) hideAll();
       updateOverlayBadge();
+      invoke('update_tray_menu', { overlayEnabled, isMuted: CONFIG.muted }).catch(() => {});
     });
 
     // Système de debounce pour le raccourci global afin d'éviter le double-trigger
@@ -290,6 +292,7 @@ async function setupTauriEvents() {
       overlayEnabled = !overlayEnabled;
       if (!overlayEnabled) hideAll();
       updateOverlayBadge();
+      invoke('update_tray_menu', { overlayEnabled, isMuted: CONFIG.muted }).catch(() => {});
     };
 
     // Mise à jour config depuis la fenêtre options
@@ -340,6 +343,7 @@ async function setupTauriEvents() {
             overlayEnabled = !overlayEnabled;
             if (!overlayEnabled) hideAll();
             updateOverlayBadge();
+            invoke('update_tray_menu', { overlayEnabled, isMuted: CONFIG.muted }).catch(() => {});
           }
         });
       } catch (e) {

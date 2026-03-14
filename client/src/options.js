@@ -23,7 +23,7 @@ async function init() {
     const ms = config.mediaSize ?? 80;
     const px = config.posX ?? 50;
     const py = config.posY ?? 50;
-    const sc = config.shortcut || 'Ctrl+Shift+D';
+    const sc = config.shortcut || 'Ctrl+O';
 
     document.getElementById('textSize').value  = ts;
     document.getElementById('mediaSize').value = ms;
@@ -65,6 +65,43 @@ document.getElementById('mediaSize').addEventListener('input', (e) => {
   const v = e.target.value;
   document.getElementById('mediaSizeVal').textContent   = v + '%';
   document.getElementById('mediaSizeLabel').textContent = v;
+});
+
+window.resetOverlayOptions = function () {
+  document.getElementById('textSize').value  = 8;
+  document.getElementById('mediaSize').value = 80;
+  document.getElementById('posX').value = 50;
+  document.getElementById('posY').value = 50;
+  updateLabels(8, 80, 50, 50);
+};
+
+// Enregistrement du raccourci clavier
+document.getElementById('shortcut').addEventListener('keydown', (e) => {
+  e.preventDefault();
+
+  const key = e.key;
+  if (key === 'Control' || key === 'Shift' || key === 'Alt' || key === 'Meta') {
+    return; // On ignore les modificateurs seuls
+  }
+
+  if (key === 'Backspace' || key === 'Escape') {
+    document.getElementById('shortcut').value = '';
+    return;
+  }
+
+  const modifiers = [];
+  if (e.ctrlKey) modifiers.push('Ctrl');
+  if (e.altKey) modifiers.push('Alt');
+  if (e.shiftKey) modifiers.push('Shift');
+  if (e.metaKey) modifiers.push('Command'); // Command (Mac) ou Super (Win)
+
+  // Nettoyer le nom de la touche
+  let keyName = key;
+  if (key === ' ') keyName = 'Space';
+  else if (key.length === 1) keyName = key.toUpperCase(); // Lettre ou symbole
+
+  const newShortcut = [...modifiers, keyName].join('+');
+  document.getElementById('shortcut').value = newShortcut;
 });
 
 window.saveOptions = async function () {
