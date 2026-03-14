@@ -36,6 +36,28 @@ mod win_clickthrough {
 }
 
 // ─── Commandes Tauri ────────────────────────────────────────────────────────
+use std::sync::Mutex;
+
+struct TrayMenuState {
+    menu: Mutex<Option<Menu<tauri::Wry>>>,
+}
+
+#[tauri::command]
+fn update_tray_menu(state: tauri::State<'_, TrayMenuState>, overlay_enabled: bool, is_muted: bool) {
+    if let Some(menu) = state.menu.lock().unwrap().as_ref() {
+        if let Some(mute_item) = menu.get("mute") {
+            if let Some(item) = mute_item.as_menuitem() {
+                let _ = item.set_text(if is_muted { "🔊 Activer le son" } else { "🔇 Désactiver le son" });
+                let _ = item.set_enabled(overlay_enabled);
+            }
+        }
+        if let Some(disable_item) = menu.get("disable") {
+            if let Some(item) = disable_item.as_menuitem() {
+                let _ = item.set_text(if overlay_enabled { "👁  Désactiver l'overlay" } else { "👁  Activer l'overlay" });
+            }
+        }
+    }
+}
 
 #[tauri::command]
 fn set_clickthrough(window: WebviewWindow, enabled: bool) {
@@ -91,9 +113,11 @@ fn config_path() -> Result<std::path::PathBuf, String> {
 
 pub fn run() {
     tauri::Builder::default()
+        .manage(TrayMenuState { menu: Mutex::new(None) })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            update_tray_menu,
             set_clickthrough,
             save_and_notify,
             load_config,
@@ -101,12 +125,15 @@ pub fn run() {
         .setup(|app| {
             // ── Tray icon ───────────────────────────────────────────
             let i_options = MenuItem::with_id(app, "options", "⚙️  Options",              true, None::<&str>)?;
-            let i_mute    = MenuItem::with_id(app, "mute",    "🔇 Mute / Unmute",          true, None::<&str>)?;
-            let i_disable = MenuItem::with_id(app, "disable", "👁  Activer / Désactiver",   true, None::<&str>)?;
+            let i_mute    = MenuItem::with_id(app, "mute",    "🔇 Désactiver le son",     true, None::<&str>)?;
+            let i_disable = MenuItem::with_id(app, "disable", "👁  Désactiver l'overlay", true, None::<&str>)?;
             let i_quit    = MenuItem::with_id(app, "quit",    "❌ Quitter Cacabox",         true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&i_options, &i_mute, &i_disable, &i_quit])?;
 
-            TrayIconBuilder::new()
+            let state = app.state::<TrayMenuState>();
+            *state.menu.lock().unwrap() = Some(menu.clone());
+
+            TrayIconBuilder::with_id("main_tray")
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
                 .tooltip("Cacabox Overlay")
