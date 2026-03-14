@@ -31,6 +31,7 @@ const messageContainer = document.getElementById('message-container');
 const messageText     = document.getElementById('message-text');
 const audioPlayer     = document.getElementById('audio-player');
 const muteBadge       = document.getElementById('mute-badge');
+const audioVisualizer = document.getElementById('audio-visualizer');
 
 // ─── Application de la config ─────────────────────────────────────────────────
 
@@ -90,6 +91,94 @@ async function loadConfig() {
   }
 }
 
+// ─── Audio Visualizer ────────────────────────────────────────────────────────
+
+let audioContext, analyser, source, dataArray;
+let isVisualizerSetup = false;
+let animationFrameId;
+
+function setupAudioVisualizer() {
+  if (isVisualizerSetup) return;
+  // Nécessite une interaction utilisateur ou sera activé à la première lecture (Chrome policy)
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  audioContext = new AudioContext();
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 64; // Petit buffer pour dessiner quelques barres (32 bins)
+  source = audioContext.createMediaElementSource(audioPlayer);
+  source.connect(analyser);
+  analyser.connect(audioContext.destination);
+
+  const bufferLength = analyser.frequencyBinCount;
+  dataArray = new Uint8Array(bufferLength);
+  isVisualizerSetup = true;
+}
+
+function startVisualizer() {
+  if (!isVisualizerSetup) {
+    try { setupAudioVisualizer(); } catch (e) { console.warn("Visualizer init failed", e); return; }
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+
+  const canvas = audioVisualizer;
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+
+  // High-DPI canvas
+  const size = 120; // 60px * 2 pour la résolution
+  canvas.width = size;
+  canvas.height = size;
+  ctx.scale(2, 2);
+
+  const cx = 30; // Centre
+  const cy = 30;
+  const radius = 22; // Rayon de base (autour de l'avatar 36x36 -> r=18)
+
+  function draw() {
+    animationFrameId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, 60, 60);
+
+    const bars = dataArray.length;
+    const step = (Math.PI * 2) / bars;
+
+    for (let i = 0; i < bars; i++) {
+      const value = dataArray[i];
+      const percent = value / 255;
+      const height = percent * 8; // Max 8px de hauteur
+
+      if (height === 0) continue;
+
+      const angle = i * step - Math.PI / 2;
+
+      const x1 = cx + Math.cos(angle) * radius;
+      const y1 = cy + Math.sin(angle) * radius;
+
+      const x2 = cx + Math.cos(angle) * (radius + height);
+      const y2 = cy + Math.sin(angle) * (radius + height);
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = `rgba(255, 60, 110, ${0.5 + percent * 0.5})`; // Rouge-rose
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+
+  draw();
+}
+
+function stopVisualizer() {
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
+  audioVisualizer.style.display = 'none';
+}
+
 // ─── Chargement Socket.io ────────────────────────────────────────────────────
 
 async function loadSocketIO() {
@@ -141,7 +230,7 @@ function showItem(item) {
   // Si un son TTS est fourni, on le met en route via audioPlayer (seulement si non mute)
   if (payload.ttsUrl && !CONFIG.muted) {
     audioPlayer.src = payload.ttsUrl;
-    audioPlayer.play().catch(() => {});
+    audioPlayer.play().then(() => startVisualizer()).catch(() => {});
   }
 
   switch (type) {
@@ -187,7 +276,7 @@ function showItem(item) {
       if (fileType === 'audio') {
         if (CONFIG.muted) { socket.emit('media_ended'); return; }
         audioPlayer.src = url;
-        audioPlayer.play().catch(() => {});
+        audioPlayer.play().then(() => startVisualizer()).catch(() => {});
         audioPlayer.onended = () => socket.emit('media_ended');
       } else if (fileType === 'video') {
         mediaVideo.style.display = 'block';
@@ -300,6 +389,8 @@ window.hideAll = function hideAll() {
   mediaVideo.onerror = null;
   audioPlayer.onended = null;
   audioPlayer.onerror = null;
+
+  stopVisualizer();
 
   mediaContainer.classList.remove('visible');
   messageContainer.classList.remove('visible');
@@ -444,6 +535,11 @@ function connectSocket() {
 
   socket.on('show', (item) => showItem(item));
 
+  socket.on('force_skip', () => {
+    hideAll();
+    socket.emit('media_ended');
+  });
+
   socket.on('disconnect', () => {
     console.warn('[Cacabox] Déconnecté — reconnexion…');
   });
@@ -453,6 +549,7 @@ function connectSocket() {
 
 (async () => {
   await loadConfig();
+  updateOverlayBadge(); // Afficher l'œil par défaut au lancement
 
   if (!CONFIG.pseudo || CONFIG.pseudo === 'CHANGE_MOI') {
     CONFIG.pseudo = 'pc_' + Math.random().toString(36).slice(2, 7);

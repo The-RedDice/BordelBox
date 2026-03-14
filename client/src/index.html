@@ -88,10 +88,26 @@
       z-index: 30;
     }
     #sender-info.visible { opacity: 1; }
+    #sender-avatar-container {
+      position: relative;
+      width: 36px; height: 36px;
+    }
     #sender-avatar {
       width: 36px; height: 36px;
       border-radius: 50%;
       object-fit: cover;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 2;
+    }
+    #audio-visualizer {
+      position: absolute;
+      /* On le centre et on le fait déborder de l'avatar */
+      top: -12px; left: -12px;
+      width: 60px; height: 60px;
+      z-index: 1;
+      pointer-events: none;
+      display: none;
     }
     #sender-name {
       font-family: 'Arial', sans-serif;
@@ -184,7 +200,10 @@
   </div>
 
   <div id="sender-info">
-    <img id="sender-avatar" alt="">
+    <div id="sender-avatar-container">
+      <canvas id="audio-visualizer"></canvas>
+      <img id="sender-avatar" alt="">
+    </div>
     <span id="sender-name"></span>
   </div>
 

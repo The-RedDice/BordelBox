@@ -96,6 +96,10 @@ const commands = [
     .setName('online')
     .setDescription('Affiche la liste des PCs actuellement connectés'),
 
+  new SlashCommandBuilder()
+    .setName('voteskip')
+    .setDescription('Voter pour passer le média en cours (la moitié des PC doit dire oui)'),
+
 ].map(cmd => cmd.toJSON());
 
 // ─── Déploiement ─────────────────────────────────────────
