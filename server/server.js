@@ -186,11 +186,21 @@ function downloadMedia(url) {
     const filename = `media_${Date.now()}.mp4`;
     const outPath  = path.join(MEDIA_DIR, filename);
 
-    execFile('yt-dlp', [
+    let ytDlpPath = 'yt-dlp';
+    const localUnixPath = path.resolve(__dirname, '../yt-dlp');
+    const localWinPath = path.resolve(__dirname, '../yt-dlp.exe');
+    if (fs.existsSync(localUnixPath)) {
+      ytDlpPath = localUnixPath;
+    } else if (fs.existsSync(localWinPath)) {
+      ytDlpPath = localWinPath;
+    }
+
+    execFile(ytDlpPath, [
       '--no-playlist',
       '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
       '--merge-output-format', 'mp4',
       '-o', outPath,
+      '--',
       url,
     ], { timeout: 120_000 }, (err) => {
       if (err) return reject(err);

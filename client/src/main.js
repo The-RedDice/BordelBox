@@ -173,6 +173,9 @@ function showItem(item) {
         mediaCaption.classList.add('visible');
       }
 
+      // Lancer la lecture explicitement après avoir configuré la source
+      mediaVideo.play().catch(e => console.error("Erreur lecture vidéo :", e));
+
       mediaVideo.onended = () => { hideAll(); socket.emit('media_ended'); };
       mediaVideo.onerror = () => { hideAll(); socket.emit('media_ended'); };
       break;
