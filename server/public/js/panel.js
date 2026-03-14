@@ -189,6 +189,8 @@ function renderQueue() {
         const url = item.payload.url;
         if (item.payload.fileType === 'audio') {
            previewHtml = `<a href="${url}" target="_blank" style="color:var(--green);text-decoration:none;">[AUD] Écouter</a>`;
+        } else if (item.payload.fileType === 'video') {
+           previewHtml = `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none;">[VID] Voir la vidéo</a>`;
         } else {
            previewHtml = `<a href="${url}" target="_blank" style="color:var(--green);text-decoration:none;">[IMG] <img src="${url}" style="height:24px; vertical-align:middle; border-radius:3px; margin-left:4px;"></a>`;
         }
@@ -259,6 +261,8 @@ function renderHistory() {
       const url = item.payload.url;
       if (item.payload.fileType === 'audio') {
          previewHtml = `<a href="${url}" target="_blank" style="color:var(--green);text-decoration:none;">[AUD] Écouter</a>`;
+      } else if (item.payload.fileType === 'video') {
+         previewHtml = `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none;">[VID] Voir la vidéo</a>`;
       } else {
          previewHtml = `<a href="${url}" target="_blank" style="color:var(--green);text-decoration:none;">[IMG] <img src="${url}" style="height:24px; vertical-align:middle; border-radius:3px; margin-left:4px;"></a>`;
       }
