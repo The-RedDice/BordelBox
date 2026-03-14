@@ -111,6 +111,25 @@
     }
     #media-caption.visible { display: block; }
 
+    /* ─── Indicateur VoteSkip ─── */
+    #voteskip-container {
+      margin-top: 14px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      font-size: 1rem;
+      font-weight: bold;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 30;
+      text-align: center;
+    }
+    #voteskip-container.visible { opacity: 1; }
+
     /* ─── Infos expéditeur (avatar + pseudo Discord) ─── */
     #sender-info {
       position: fixed;
@@ -246,6 +265,10 @@
     </div>
 
     <div id="media-caption"></div>
+
+    <div id="voteskip-container">
+      Passer (Skip) : <span id="voteskip-count">0/0</span> votes
+    </div>
   </div>
 
   <div id="message-container">

@@ -83,7 +83,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const { commandName } = interaction;
 
   // Réponse différée pour les commandes longues
-  if (commandName === 'sendurl' || commandName === 'sendfile' || commandName === 'message' || commandName === 'online' || commandName === 'voteskip') {
+  if (commandName === 'sendurl' || commandName === 'sendfile' || commandName === 'message' || commandName === 'online') {
     await interaction.deferReply();
   } else if (commandName === 'tuto') {
     await interaction.deferReply({ ephemeral: true });
@@ -191,23 +191,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         break;
       }
 
-      // ── /voteskip ──────────────────────────────────────
-      case 'voteskip': {
-        const data = await apiPost('/voteskip', { voterId: interaction.user.id });
-
-        if (data.error) {
-          await interaction.editReply(`❌ Impossible de voter: ${data.error}`);
-          return;
-        }
-
-        if (data.skipped) {
-          await interaction.editReply(`⏭️ **Skipped !** (Vote atteint: ${data.currentVotes}/${data.requiredVotes})`);
-        } else {
-          await interaction.editReply(`🗳️ Vote enregistré : **${data.currentVotes}/${data.requiredVotes}** requis pour skip.`);
-        }
-        break;
-      }
-
       // ── /online ────────────────────────────────────────
       case 'online': {
         const data = await apiGet('/clients');
@@ -236,7 +219,6 @@ BordelBox est un système permettant d'afficher des médias et des messages en d
 \` /sendfile \` : Permet d'uploader directement un fichier (image, vidéo, audio) depuis Discord.
 \` /message \` : Affiche un gros texte animé sur les écrans.
 \` /online \` : Affiche la liste des PC actuellement connectés à BordelBox.
-\` /voteskip \` : Lance un vote pour passer le média en cours. Si la moitié des connectés vote oui, le média est zappé.
 \` /tuto \` : Affiche ce message d'aide.
 
 **✨ Options des commandes d'envoi (\`/sendurl\`, \`/sendfile\`, \`/message\`) :**

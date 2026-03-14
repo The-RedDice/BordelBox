@@ -410,6 +410,9 @@ router.post('/voteskip', (req, res) => {
     return res.json({ skipped: true, currentVotes, requiredVotes });
   }
 
+  // Émettre l'état des votes à tous les clients
+  io.emit('voteskip_update', { currentVotes, requiredVotes });
+
   res.json({ skipped: false, currentVotes, requiredVotes });
 });
 

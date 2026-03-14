@@ -13,6 +13,7 @@ let CONFIG = {
   mediaSize:   80,   // % écran
   muted:       true,
   shortcut:    'Ctrl+O',
+  shortcutVoteskip: 'Ctrl+Shift+S',
 };
 
 let overlayEnabled = true;
@@ -36,6 +37,8 @@ const audioVisualizer = document.getElementById('audio-visualizer');
 const mediaProgressContainer = document.getElementById('media-progress-container');
 const mediaProgressFill      = document.getElementById('media-progress-fill');
 const mediaProgressText      = document.getElementById('media-progress-text');
+const voteskipContainer      = document.getElementById('voteskip-container');
+const voteskipCount          = document.getElementById('voteskip-count');
 
 // ─── Format Time ──────────────────────────────────────────────────────────────
 function formatTime(seconds) {
@@ -473,6 +476,11 @@ window.hideAll = function hideAll() {
     if (mediaProgressFill) mediaProgressFill.style.width = '0%';
     if (mediaProgressText) mediaProgressText.textContent = '0:00 / 0:00';
   }
+
+  if (voteskipContainer) {
+    voteskipContainer.classList.remove('visible');
+    if (voteskipCount) voteskipCount.textContent = '0/0';
+  }
 }
 
 window.updateOverlayBadge = function updateOverlayBadge() {
@@ -531,6 +539,7 @@ async function setupTauriEvents() {
       const oldUrl = CONFIG.serverUrl;
       const oldPseudo = CONFIG.pseudo;
       const oldShortcut = CONFIG.shortcut;
+      const oldShortcutVoteskip = CONFIG.shortcutVoteskip;
 
       const newConfig = typeof payload === 'string' ? JSON.parse(payload) : payload;
       // Ne pas écraser l'état mute actuel avec ce qui vient des options,
@@ -548,6 +557,18 @@ async function setupTauriEvents() {
           });
         } catch (e) {
           console.error("Erreur mise à jour raccourci", e);
+        }
+      }
+
+      if (CONFIG.shortcutVoteskip !== oldShortcutVoteskip && CONFIG.shortcutVoteskip) {
+        try {
+          await unregister(oldShortcutVoteskip).catch(() => {});
+          await register(CONFIG.shortcutVoteskip, (shortcut) => {
+            if (shortcut && shortcut.state === "Released") return;
+            triggerVoteskipSafely();
+          });
+        } catch (e) {
+          console.error("Erreur mise à jour raccourci voteskip", e);
         }
       }
 
@@ -587,6 +608,32 @@ async function setupTauriEvents() {
       }
     }
 
+    let lastVoteskipTime = 0;
+    window.triggerVoteskipSafely = () => {
+      const now = Date.now();
+      if (now - lastVoteskipTime < 1000) return; // Debounce de 1 seconde
+      lastVoteskipTime = now;
+
+      fetch(`${CONFIG.serverUrl}/api/voteskip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voterId: CONFIG.pseudo }) // Utilisation du pseudo comme ID
+      }).catch(e => console.error("[BordelBox] Erreur appel voteskip:", e));
+    };
+
+    if (CONFIG.shortcutVoteskip) {
+      try {
+        await unregister(CONFIG.shortcutVoteskip).catch(() => {});
+        await register(CONFIG.shortcutVoteskip, (e) => {
+          if (e.state === "Pressed") {
+            triggerVoteskipSafely();
+          }
+        });
+      } catch (e) {
+        console.error("[BordelBox] Impossible d'enregistrer le raccourci voteskip initial:", e);
+      }
+    }
+
     // Click-through
     await invoke('set_clickthrough', { enabled: true });
 
@@ -616,6 +663,13 @@ function connectSocket() {
   socket.on('force_skip', () => {
     hideAll();
     socket.emit('media_ended');
+  });
+
+  socket.on('voteskip_update', (data) => {
+    if (voteskipContainer && voteskipCount && data.requiredVotes > 0) {
+      voteskipCount.textContent = `${data.currentVotes}/${data.requiredVotes}`;
+      voteskipContainer.classList.add('visible');
+    }
   });
 
   socket.on('disconnect', () => {

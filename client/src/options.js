@@ -25,6 +25,7 @@ async function init() {
     const px = config.posX ?? 50;
     const py = config.posY ?? 50;
     const sc = config.shortcut || 'Ctrl+O';
+    const scVs = config.shortcutVoteskip || 'Ctrl+Shift+S';
 
     document.getElementById('messageSize').value  = msgSize;
     document.getElementById('captionSize').value  = capSize;
@@ -32,6 +33,7 @@ async function init() {
     document.getElementById('posX').value = px;
     document.getElementById('posY').value = py;
     document.getElementById('shortcut').value = sc;
+    document.getElementById('shortcutVoteskip').value = scVs;
     updateLabels(msgSize, capSize, ms, px, py);
 
   } catch (e) {
@@ -87,7 +89,7 @@ window.resetOverlayOptions = function () {
 };
 
 // Enregistrement du raccourci clavier
-document.getElementById('shortcut').addEventListener('keydown', (e) => {
+function handleShortcutInput(e, inputId) {
   e.preventDefault();
 
   const key = e.key;
@@ -96,7 +98,7 @@ document.getElementById('shortcut').addEventListener('keydown', (e) => {
   }
 
   if (key === 'Backspace' || key === 'Escape') {
-    document.getElementById('shortcut').value = '';
+    document.getElementById(inputId).value = '';
     return;
   }
 
@@ -112,8 +114,11 @@ document.getElementById('shortcut').addEventListener('keydown', (e) => {
   else if (key.length === 1) keyName = key.toUpperCase(); // Lettre ou symbole
 
   const newShortcut = [...modifiers, keyName].join('+');
-  document.getElementById('shortcut').value = newShortcut;
-});
+  document.getElementById(inputId).value = newShortcut;
+}
+
+document.getElementById('shortcut').addEventListener('keydown', (e) => handleShortcutInput(e, 'shortcut'));
+document.getElementById('shortcutVoteskip').addEventListener('keydown', (e) => handleShortcutInput(e, 'shortcutVoteskip'));
 
 window.saveOptions = async function () {
   const config = {
@@ -125,6 +130,7 @@ window.saveOptions = async function () {
     posX:        parseInt(document.getElementById('posX').value, 10),
     posY:        parseInt(document.getElementById('posY').value, 10),
     shortcut:    document.getElementById('shortcut').value.trim(),
+    shortcutVoteskip: document.getElementById('shortcutVoteskip').value.trim(),
   };
 
   if (!config.pseudo) {
