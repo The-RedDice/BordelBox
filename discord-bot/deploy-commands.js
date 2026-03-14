@@ -30,9 +30,9 @@ const commands = [
       o.setName('lien')
        .setDescription('URL YouTube ou TikTok')
        .setRequired(true))
-    .addStringOption(o =>
+    .addUserOption(o =>
       o.setName('cible')
-       .setDescription('Pseudo du PC ciblé (laisser vide = tout le monde)')
+       .setDescription('Utilisateur du PC ciblé (laisser vide = tout le monde)')
        .setRequired(false))
     .addStringOption(o =>
       o.setName('text')
@@ -54,9 +54,9 @@ const commands = [
       o.setName('fichier')
        .setDescription('Image ou fichier audio')
        .setRequired(true))
-    .addStringOption(o =>
+    .addUserOption(o =>
       o.setName('cible')
-       .setDescription('Pseudo du PC ciblé (laisser vide = tout le monde)')
+       .setDescription('Utilisateur du PC ciblé (laisser vide = tout le monde)')
        .setRequired(false))
     .addStringOption(o =>
       o.setName('text')
@@ -79,9 +79,9 @@ const commands = [
        .setDescription('Le message à afficher (max 200 caractères)')
        .setRequired(true)
        .setMaxLength(200))
-    .addStringOption(o =>
+    .addUserOption(o =>
       o.setName('cible')
-       .setDescription('Pseudo du PC ciblé (laisser vide = tout le monde)')
+       .setDescription('Utilisateur du PC ciblé (laisser vide = tout le monde)')
        .setRequired(false))
     .addStringOption(o =>
       o.setName('tts')

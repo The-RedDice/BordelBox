@@ -11,7 +11,7 @@ let CONFIG = {
   messageSize: 8,    // vw
   captionSize: 2.5,  // vw
   mediaSize:   80,   // % écran
-  muted:       false,
+  muted:       true,
   shortcut:    'Ctrl+O',
 };
 
@@ -32,6 +32,26 @@ const messageText     = document.getElementById('message-text');
 const audioPlayer     = document.getElementById('audio-player');
 const muteBadge       = document.getElementById('mute-badge');
 const audioVisualizer = document.getElementById('audio-visualizer');
+
+const mediaProgressContainer = document.getElementById('media-progress-container');
+const mediaProgressFill      = document.getElementById('media-progress-fill');
+const mediaProgressText      = document.getElementById('media-progress-text');
+
+// ─── Format Time ──────────────────────────────────────────────────────────────
+function formatTime(seconds) {
+  if (isNaN(seconds) || seconds < 0) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+// ─── Update Progress ──────────────────────────────────────────────────────────
+function updateProgress(currentTime, duration) {
+  if (!duration || isNaN(duration)) return;
+  const percent = (currentTime / duration) * 100;
+  if (mediaProgressFill) mediaProgressFill.style.width = `${percent}%`;
+  if (mediaProgressText) mediaProgressText.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+}
 
 // ─── Application de la config ─────────────────────────────────────────────────
 
@@ -251,6 +271,10 @@ function showItem(item) {
   switch (type) {
 
     case 'media': {
+      if (mediaProgressContainer) {
+        mediaProgressContainer.classList.add('visible');
+        mediaVideo.ontimeupdate = () => updateProgress(mediaVideo.currentTime, mediaVideo.duration);
+      }
       const src = `${CONFIG.serverUrl}/media/${payload.filename}`;
       mediaVideo.style.display = 'block';
       mediaImage.style.display = 'none';
@@ -308,7 +332,15 @@ function showItem(item) {
           hideAll();
           socket.emit('media_ended');
         };
+        if (mediaProgressContainer) {
+          mediaProgressContainer.classList.add('visible');
+          audioPlayer.ontimeupdate = () => updateProgress(audioPlayer.currentTime, audioPlayer.duration);
+        }
       } else if (fileType === 'video') {
+        if (mediaProgressContainer) {
+          mediaProgressContainer.classList.add('visible');
+          mediaVideo.ontimeupdate = () => updateProgress(mediaVideo.currentTime, mediaVideo.duration);
+        }
         mediaVideo.style.display = 'block';
         mediaImage.style.display = 'none';
         mediaVideo.src = url;
@@ -417,8 +449,10 @@ function showItem(item) {
 window.hideAll = function hideAll() {
   mediaVideo.onended = null;
   mediaVideo.onerror = null;
+  mediaVideo.ontimeupdate = null;
   audioPlayer.onended = null;
   audioPlayer.onerror = null;
+  audioPlayer.ontimeupdate = null;
 
   stopVisualizer();
 
@@ -430,6 +464,11 @@ window.hideAll = function hideAll() {
   mediaVideo.src = ''; mediaVideo.pause();
   mediaImage.src = '';
   audioPlayer.src = ''; audioPlayer.pause();
+  if (mediaProgressContainer) {
+    mediaProgressContainer.classList.remove('visible');
+    if (mediaProgressFill) mediaProgressFill.style.width = '0%';
+    if (mediaProgressText) mediaProgressText.textContent = '0:00 / 0:00';
+  }
 }
 
 window.updateOverlayBadge = function updateOverlayBadge() {

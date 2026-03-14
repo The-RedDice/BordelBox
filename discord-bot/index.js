@@ -95,7 +95,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       // ── /sendurl ───────────────────────────────────────
       case 'sendurl': {
         const url     = interaction.options.getString('lien', true);
-        const target  = interaction.options.getString('cible')   || 'all';
+        const targetUser = interaction.options.getUser('cible');
+        const target  = targetUser ? targetUser.username : 'all';
         const caption = interaction.options.getString('text') || '';
         const ttsVoice = interaction.options.getString('tts') || '';
         const greenscreen = interaction.options.getBoolean('greenscreen') || false;
@@ -133,7 +134,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       // ── /sendfile ──────────────────────────────────────
       case 'sendfile': {
         const attachment = interaction.options.getAttachment('fichier', true);
-        const target     = interaction.options.getString('cible')   || 'all';
+        const targetUser = interaction.options.getUser('cible');
+        const target  = targetUser ? targetUser.username : 'all';
         const caption    = interaction.options.getString('text') || '';
         const ttsVoice = interaction.options.getString('tts') || '';
         const greenscreen = interaction.options.getBoolean('greenscreen') || false;
@@ -166,7 +168,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       // ── /message ───────────────────────────────────────
       case 'message': {
         const text   = interaction.options.getString('texte', true);
-        const target = interaction.options.getString('cible') || 'all';
+        const targetUser = interaction.options.getUser('cible');
+        const target  = targetUser ? targetUser.username : 'all';
         const ttsVoice = interaction.options.getString('tts') || '';
         const greenscreen = interaction.options.getBoolean('greenscreen') || false;
 

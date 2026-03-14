@@ -44,6 +44,49 @@
     #media-video { display: block; }
     #media-image { display: none; }
 
+    /* ─── Barre de progression média ─── */
+    #media-progress-container {
+      margin-top: 10px;
+      width: calc(var(--media-size, 80) * 1vw);
+      max-width: 600px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      background: rgba(0,0,0,0.4);
+      padding: 4px 8px;
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+      box-sizing: border-box;
+    }
+    #media-progress-container.visible { opacity: 1; }
+
+    #media-progress-bar {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #media-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: rgba(255,255,255,0.8);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    #media-progress-text {
+      font-family: monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.8);
+      min-width: 70px;
+      text-align: right;
+    }
+
     .greenscreen {
       /* Le chroma key peut être géré de différentes manières.
          mix-blend-mode: screen pour des fonds noirs (mais c'est green screen).
@@ -158,29 +201,31 @@
     /* ─── Indicateur mute ─── */
     #mute-badge {
       position: fixed;
-      bottom: 16px; left: 16px;
-      background: rgba(255,60,110,0.85);
-      color: #fff;
+      bottom: 12px; left: 12px;
+      background: rgba(0,0,0,0.4);
+      color: rgba(255,255,255,0.7);
       font-family: monospace;
-      font-size: 13px;
+      font-size: 10px;
       font-weight: bold;
-      padding: 5px 12px;
-      border-radius: 8px;
+      padding: 4px 8px;
+      border-radius: 6px;
       pointer-events: none;
       display: none;
       z-index: 99;
+      backdrop-filter: blur(4px);
     }
     #mute-badge.visible { display: block; }
 
     /* ─── Indicateur Overlay ON (Œil) ─── */
     #overlay-badge {
       position: fixed;
-      top: 16px; right: 16px;
-      font-size: 32px;
+      top: 12px; right: 12px;
+      font-size: 16px;
       pointer-events: none;
       display: none;
       z-index: 98;
-      opacity: 0.7;
+      opacity: 0.3;
+      filter: drop-shadow(0px 0px 2px rgba(0,0,0,0.5));
     }
     #overlay-badge.visible { display: block; }
 
@@ -192,6 +237,14 @@
   <div id="media-container">
     <video id="media-video" crossorigin="anonymous" autoplay playsinline></video>
     <img   id="media-image" alt="">
+
+    <div id="media-progress-container">
+      <div id="media-progress-bar">
+        <div id="media-progress-fill"></div>
+      </div>
+      <div id="media-progress-text">0:00 / 0:00</div>
+    </div>
+
     <div id="media-caption"></div>
   </div>
 
