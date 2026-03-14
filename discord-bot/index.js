@@ -135,7 +135,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const avatarUrl  = interaction.user.displayAvatarURL({ size: 64, extension: 'png' });
 
         const fileUrl  = attachment.url;
-        const fileType = attachment.contentType?.startsWith('audio') ? 'audio' : 'image';
+        let fileType = 'image';
+        if (attachment.contentType?.startsWith('audio')) {
+          fileType = 'audio';
+        } else if (attachment.contentType?.startsWith('video')) {
+          fileType = 'video';
+        }
 
         const data = await apiPost('/sendfile', { fileUrl, fileType, target, caption, senderName, avatarUrl, ttsVoice, greenscreen });
 
