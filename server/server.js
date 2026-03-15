@@ -272,7 +272,6 @@ io.on('connection', (socket) => {
     const client = clients.get(myPseudo);
     if (client) {
       client.busy = false;
-      console.log(`[Queue] ${myPseudo} libre.`);
       flushQueue(myPseudo);
     }
   });
