@@ -354,7 +354,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
               { label: 'Impact (Meme)', value: 'Impact' },
               { label: 'Comic Sans MS (Troll)', value: '"Comic Sans MS"' },
               { label: 'Courier New (Machine à écrire)', value: '"Courier New"' },
-              { label: 'Arial (Classique)', value: 'Arial' }
+              { label: 'Arial (Classique)', value: 'Arial' },
+              { label: 'Georgia (Sérieux)', value: 'Georgia' },
+              { label: 'Trebuchet MS', value: '"Trebuchet MS"' }
             ])
         );
 
@@ -367,7 +369,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
               { label: 'Fondu (Fade)', value: 'fade' },
               { label: 'Glissement (Slide)', value: 'slide' },
               { label: 'Rebond (Bounce)', value: 'bounce' },
-              { label: 'Zoom', value: 'zoom' }
+              { label: 'Zoom', value: 'zoom' },
+              { label: 'Rotation (Spin)', value: 'spin' },
+              { label: 'Tremblement (Shake)', value: 'shake' },
+              { label: 'Chute (Drop)', value: 'drop' }
             ])
         );
 
@@ -378,7 +383,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
             .addOptions([
               { label: 'Aucun', value: 'aucun' },
               { label: 'Particules', value: 'particules' },
-              { label: 'Étoiles', value: 'etoiles' }
+              { label: 'Étoiles', value: 'etoiles' },
+              { label: 'Confettis', value: 'confetti' },
+              { label: 'Feu', value: 'feu' }
             ])
         );
 
