@@ -118,7 +118,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const { commandName } = interaction;
 
   // Réponse différée pour les commandes longues
-  if (commandName === 'sendurl' || commandName === 'sendfile' || commandName === 'message' || commandName === 'online' || commandName === 'stats' || commandName === 'leaderboard' || commandName === 'queue') {
+  if (commandName === 'sendurl' || commandName === 'sendfile' || commandName === 'message' || commandName === 'online' || commandName === 'stats' || commandName === 'leaderboard' || commandName === 'queue' || commandName === 'style') {
     await interaction.deferReply();
   } else if (commandName === 'tuto') {
     await interaction.deferReply({ ephemeral: true });
@@ -142,11 +142,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const avatarUrl  = interaction.user.displayAvatarURL({ size: 64, extension: 'png' });
         const userId     = interaction.user.id;
 
+        // Récupérer le profil et override
+        const profileData = await apiGet(`/style/${userId}`);
+        const profile = profileData.profile || {};
+        const color = interaction.options.getString('couleur') || profile.color;
+        const font = interaction.options.getString('police') || profile.font;
+        const animation = interaction.options.getString('animation') || profile.animation;
+        const effect = interaction.options.getString('effet') || profile.effect;
+
         await interaction.editReply({
           content: `⏳ Traitement de \`${url}\` en cours…`,
         });
 
-        const data = await apiPost('/sendurl', { url, target, caption, senderName, avatarUrl, ttsVoice, greenscreen, userId });
+        const data = await apiPost('/sendurl', { url, target, caption, senderName, avatarUrl, ttsVoice, greenscreen, userId, color, font, animation, effect });
 
         if (data.error) {
           await interaction.editReply(`❌ Erreur : ${data.error}`);
@@ -187,6 +195,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const avatarUrl  = interaction.user.displayAvatarURL({ size: 64, extension: 'png' });
         const userId     = interaction.user.id;
 
+        // Récupérer le profil et override
+        const profileData = await apiGet(`/style/${userId}`);
+        const profile = profileData.profile || {};
+        const color = interaction.options.getString('couleur') || profile.color;
+        const font = interaction.options.getString('police') || profile.font;
+        const animation = interaction.options.getString('animation') || profile.animation;
+        const effect = interaction.options.getString('effet') || profile.effect;
+
         const fileUrl  = attachment.url;
         let fileType = 'image';
         if (attachment.contentType?.startsWith('audio')) {
@@ -200,7 +216,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           return;
         }
 
-        const data = await apiPost('/sendfile', { fileUrl, fileType, target, caption, senderName, avatarUrl, ttsVoice, greenscreen, userId });
+        const data = await apiPost('/sendfile', { fileUrl, fileType, target, caption, senderName, avatarUrl, ttsVoice, greenscreen, userId, color, font, animation, effect });
 
         if (data.error) {
           await interaction.editReply(`❌ Erreur : ${data.error}`);
@@ -254,6 +270,48 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }).join('\n');
 
         await interaction.editReply(`🏆 **TOP 10 SPAMMEURS BORDELBOX** 🏆\n\n${list}`);
+        break;
+      }
+
+      // ── /style ─────────────────────────────────────────
+      case 'style': {
+        const color = interaction.options.getString('couleur');
+        const font = interaction.options.getString('police');
+        const animation = interaction.options.getString('animation');
+        const effect = interaction.options.getString('effet');
+
+        const username = interaction.user.displayName || interaction.user.username;
+        const userId = interaction.user.id;
+
+        // On vérifie que l'utilisateur veut modifier au moins un truc
+        if (!color && !font && !animation && !effect) {
+          const data = await apiGet(`/style/${userId}`);
+          const p = data.profile || {};
+          let msg = `🎨 **Votre profil de style actuel** :\n`;
+          msg += `• Couleur : ${p.color || '*Par défaut*'}\n`;
+          msg += `• Police : ${p.font || '*Par défaut*'}\n`;
+          msg += `• Animation : ${p.animation || '*Par défaut*'}\n`;
+          msg += `• Effet : ${p.effect || '*Aucun*'}\n`;
+          msg += `\n*Utilisez \`/style [options]\` pour les modifier.*`;
+          await interaction.editReply(msg);
+          return;
+        }
+
+        const data = await apiPost(`/style/${userId}`, { username, color, font, animation, effect });
+
+        if (data.error) {
+          await interaction.editReply(`❌ Erreur : ${data.error}`);
+          return;
+        }
+
+        const p = data.profile || {};
+        let msg = `✅ **Profil de style mis à jour avec succès !**\n`;
+        msg += `• Couleur : ${p.color || '*Par défaut*'}\n`;
+        msg += `• Police : ${p.font || '*Par défaut*'}\n`;
+        msg += `• Animation : ${p.animation || '*Par défaut*'}\n`;
+        msg += `• Effet : ${p.effect || '*Aucun*'}`;
+
+        await interaction.editReply(msg);
         break;
       }
 
@@ -325,7 +383,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const avatarUrl  = interaction.user.displayAvatarURL({ size: 64, extension: 'png' });
         const userId     = interaction.user.id;
 
-        const data = await apiPost('/message', { text, target, senderName, avatarUrl, ttsVoice, greenscreen, userId });
+        // Récupérer le profil et override
+        const profileData = await apiGet(`/style/${userId}`);
+        const profile = profileData.profile || {};
+        const color = interaction.options.getString('couleur') || profile.color;
+        const font = interaction.options.getString('police') || profile.font;
+        const animation = interaction.options.getString('animation') || profile.animation;
+        const effect = interaction.options.getString('effet') || profile.effect;
+
+        const data = await apiPost('/message', { text, target, senderName, avatarUrl, ttsVoice, greenscreen, userId, color, font, animation, effect });
 
         if (data.error) {
           await interaction.editReply(`❌ Erreur : ${data.error}`);

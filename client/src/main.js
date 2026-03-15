@@ -23,6 +23,7 @@ let socket;
 
 const mediaContainer  = document.getElementById('media-container');
 const mediaVideo      = document.getElementById('media-video');
+const effectsContainer = document.getElementById('effects-container');
 const mediaImage      = document.getElementById('media-image');
 const mediaCaption    = document.getElementById('media-caption');
 const senderInfo      = document.getElementById('sender-info');
@@ -225,6 +226,73 @@ async function loadSocketIO() {
   });
 }
 
+// ─── Effets et Styles ────────────────────────────────────────────────────────
+
+function applyStyle(payload) {
+  const style = payload.style || {};
+
+  // Appliquer la police et la couleur au caption et au message
+  const elements = [messageText, mediaCaption];
+  elements.forEach(el => {
+    if (style.color) {
+      el.style.color = style.color;
+      el.style.textShadow = `2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 0 10px ${style.color}`;
+    } else {
+      el.style.color = '';
+      el.style.textShadow = '';
+    }
+
+    if (style.font) {
+      el.style.fontFamily = style.font;
+    } else {
+      el.style.fontFamily = '';
+    }
+
+    // Animation de texte (surtout pour le message)
+    el.style.animation = 'none';
+    el.offsetHeight; // force reflow
+
+    if (style.animation) {
+      if (style.animation === 'fade') el.style.animation = 'msg-fade 0.5s ease-in-out both';
+      else if (style.animation === 'slide') el.style.animation = 'msg-slide 0.5s cubic-bezier(0.25, 1, 0.5, 1) both';
+      else if (style.animation === 'zoom') el.style.animation = 'msg-zoom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both';
+      else if (style.animation === 'bounce') el.style.animation = 'msg-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both';
+    } else {
+      // Par défaut
+      if (el === messageText) el.style.animation = 'msg-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both';
+      else el.style.animation = 'msg-fade 0.3s ease both';
+    }
+  });
+
+  // Appliquer les particules
+  effectsContainer.innerHTML = '';
+  if (style.effect === 'particules' || style.effect === 'etoiles') {
+    const isStars = style.effect === 'etoiles';
+    const count = isStars ? 30 : 50;
+
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = isStars ? 'star' : 'particle';
+
+      const size = Math.random() * (isStars ? 20 : 10) + 5;
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
+
+      el.style.left = `${Math.random() * 100}vw`;
+      el.style.top = `${Math.random() * 100}vh`;
+
+      el.style.animationDelay = `${Math.random() * 2}s`;
+      el.style.animationDuration = `${Math.random() * 2 + 2}s`;
+
+      if (!isStars && style.color) {
+        el.style.background = style.color;
+      }
+
+      effectsContainer.appendChild(el);
+    }
+  }
+}
+
 // ─── Affichage ────────────────────────────────────────────────────────────────
 
 function showItem(item) {
@@ -250,6 +318,9 @@ function showItem(item) {
     mediaVideo.src = ''; mediaVideo.pause();
     mediaImage.src = '';
   }
+
+  // Appliquer le style personnalisé (s'il y en a)
+  applyStyle(payload);
 
   // Afficher l'expéditeur Discord si présent
   if (payload.senderName) {
@@ -416,9 +487,6 @@ function showItem(item) {
 
     case 'message': {
       messageText.textContent = payload.text;
-      messageText.style.animation = 'none';
-      messageText.offsetHeight;
-      messageText.style.animation = '';
 
       if (payload.greenscreen) {
         messageText.classList.add('greenscreen');

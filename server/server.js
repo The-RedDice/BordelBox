@@ -16,7 +16,7 @@ const { execFile }   = require('child_process');
 const basicAuth      = require('express-basic-auth');
 const multer         = require('multer');
 const { getAvailableModels, generateTTS } = require('./tts');
-const { recordAction, getUserStats, getLeaderboard } = require('./stats');
+const { recordAction, getUserStats, getLeaderboard, getUserProfile, saveUserProfile } = require('./stats');
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -363,9 +363,31 @@ router.get('/leaderboard', (req, res) => {
   res.json(getLeaderboard());
 });
 
+router.get('/style/:userId', (req, res) => {
+  const data = getUserProfile(req.params.userId);
+  if (!data) return res.json({ profile: {} });
+  res.json({ profile: data });
+});
+
+router.post('/style/:userId', (req, res) => {
+  const { username, color, font, animation, effect } = req.body;
+  if (!username) return res.status(400).json({ error: 'username requis' });
+
+  const currentProfile = getUserProfile(req.params.userId) || {};
+  const newProfile = {
+    color: color !== undefined ? color : currentProfile.color,
+    font: font !== undefined ? font : currentProfile.font,
+    animation: animation !== undefined ? animation : currentProfile.animation,
+    effect: effect !== undefined ? effect : currentProfile.effect,
+  };
+
+  saveUserProfile(req.params.userId, username, newProfile);
+  res.json({ ok: true, profile: newProfile });
+});
+
 // POST /api/sendurl
 router.post('/sendurl', async (req, res) => {
-  const { url, target = 'all', caption, senderName, avatarUrl, ttsVoice, greenscreen, userId } = req.body;
+  const { url, target = 'all', caption, senderName, avatarUrl, ttsVoice, greenscreen, userId, color, font, animation, effect } = req.body;
   if (!url) return res.status(400).json({ error: 'url requis' });
 
   let ttsUrl = '';
@@ -419,10 +441,12 @@ router.post('/sendurl', async (req, res) => {
     }
   }
 
+  const payloadStyle = { color, font, animation, effect };
+
   if (isDirectFile) {
     const result = enqueue(target, {
       type: 'file',
-      payload: { url, fileType, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen },
+      payload: { url, fileType, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen, style: payloadStyle },
     });
     if (result?.error) return res.status(404).json(result);
     if (userId) recordAction(userId, senderName, 'file');
@@ -435,7 +459,7 @@ router.post('/sendurl', async (req, res) => {
 
     const result = enqueue(target, {
       type: 'media',
-      payload: { ...media, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen },
+      payload: { ...media, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen, style: payloadStyle },
     });
     if (result?.error) return res.status(404).json(result);
     if (userId) recordAction(userId, senderName, 'media');
@@ -450,7 +474,7 @@ router.post('/sendurl', async (req, res) => {
 
 // POST /api/sendfile  (URL CDN Discord ou autre URL directe)
 router.post('/sendfile', async (req, res) => {
-  const { fileUrl, target = 'all', fileType = 'image', caption, senderName, avatarUrl, ttsVoice, greenscreen, userId } = req.body;
+  const { fileUrl, target = 'all', fileType = 'image', caption, senderName, avatarUrl, ttsVoice, greenscreen, userId, color, font, animation, effect } = req.body;
   if (!fileUrl) return res.status(400).json({ error: 'fileUrl requis' });
 
   try {
@@ -473,9 +497,11 @@ router.post('/sendfile', async (req, res) => {
     if (generated) ttsUrl = `${SERVER_URL}/media/${ttsFilename}`;
   }
 
+  const payloadStyle = { color, font, animation, effect };
+
   const result = enqueue(target, {
     type: 'file',
-    payload: { url: fileUrl, fileType, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen },
+    payload: { url: fileUrl, fileType, caption: caption || '', senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen, style: payloadStyle },
   });
   if (result?.error) return res.status(404).json(result);
   if (userId) recordAction(userId, senderName, 'file');
@@ -532,7 +558,7 @@ router.post('/voteskip', (req, res) => {
 
 // POST /api/message
 router.post('/message', async (req, res) => {
-  const { text, target = 'all', senderName, avatarUrl, ttsVoice, greenscreen, userId } = req.body;
+  const { text, target = 'all', senderName, avatarUrl, ttsVoice, greenscreen, userId, color, font, animation, effect } = req.body;
   if (!text) return res.status(400).json({ error: 'text requis' });
 
   let ttsUrl = '';
@@ -543,9 +569,11 @@ router.post('/message', async (req, res) => {
     if (generated) ttsUrl = `${SERVER_URL}/media/${ttsFilename}`;
   }
 
+  const payloadStyle = { color, font, animation, effect };
+
   const result = enqueue(target, {
     type: 'message',
-    payload: { text, senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen },
+    payload: { text, senderName: senderName || '', avatarUrl: avatarUrl || '', ttsUrl, greenscreen: !!greenscreen, style: payloadStyle },
   });
   if (result?.error) return res.status(404).json(result);
   if (userId) recordAction(userId, senderName, 'message');

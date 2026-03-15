@@ -85,8 +85,39 @@ function getLeaderboard(limit = 10) {
     .slice(0, limit);
 }
 
+/**
+ * Enregistrer le profil (style) d'un utilisateur
+ */
+function saveUserProfile(userId, username, profileData) {
+  if (!userId) return;
+  if (!stats[userId]) {
+    stats[userId] = {
+      username: username,
+      mediaCount: 0,
+      fileCount: 0,
+      messageCount: 0,
+      totalCount: 0,
+      lastAction: Date.now()
+    };
+  } else {
+    stats[userId].username = username;
+  }
+
+  stats[userId].profile = profileData;
+  saveStats();
+}
+
+/**
+ * Obtenir le profil (style) d'un utilisateur
+ */
+function getUserProfile(userId) {
+  return (stats[userId] && stats[userId].profile) ? stats[userId].profile : null;
+}
+
 module.exports = {
   recordAction,
   getUserStats,
-  getLeaderboard
+  getLeaderboard,
+  saveUserProfile,
+  getUserProfile
 };

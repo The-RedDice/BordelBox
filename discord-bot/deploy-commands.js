@@ -45,7 +45,40 @@ const commands = [
     .addBooleanOption(o =>
       o.setName('greenscreen')
        .setDescription('Applique un filtre green screen pour enlever le fond vert')
-       .setRequired(false)),
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('couleur')
+       .setDescription('Override la couleur (ex: red)')
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('police')
+       .setDescription('Override la police')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Impact', value: 'Impact' },
+         { name: 'Comic Sans MS', value: '"Comic Sans MS"' },
+         { name: 'Courier New', value: '"Courier New"' },
+         { name: 'Arial', value: 'Arial' }
+       ))
+    .addStringOption(o =>
+      o.setName('animation')
+       .setDescription('Override l\'animation')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Fondu (Fade)', value: 'fade' },
+         { name: 'Glissement (Slide)', value: 'slide' },
+         { name: 'Rebond (Bounce)', value: 'bounce' },
+         { name: 'Zoom', value: 'zoom' }
+       ))
+    .addStringOption(o =>
+      o.setName('effet')
+       .setDescription('Override l\'effet')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Aucun', value: 'aucun' },
+         { name: 'Particules', value: 'particules' },
+         { name: 'Étoiles', value: 'etoiles' }
+       )),
 
   new SlashCommandBuilder()
     .setName('sendfile')
@@ -69,7 +102,40 @@ const commands = [
     .addBooleanOption(o =>
       o.setName('greenscreen')
        .setDescription('Applique un filtre green screen pour enlever le fond vert')
-       .setRequired(false)),
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('couleur')
+       .setDescription('Override la couleur (ex: red)')
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('police')
+       .setDescription('Override la police')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Impact', value: 'Impact' },
+         { name: 'Comic Sans MS', value: '"Comic Sans MS"' },
+         { name: 'Courier New', value: '"Courier New"' },
+         { name: 'Arial', value: 'Arial' }
+       ))
+    .addStringOption(o =>
+      o.setName('animation')
+       .setDescription('Override l\'animation')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Fondu (Fade)', value: 'fade' },
+         { name: 'Glissement (Slide)', value: 'slide' },
+         { name: 'Rebond (Bounce)', value: 'bounce' },
+         { name: 'Zoom', value: 'zoom' }
+       ))
+    .addStringOption(o =>
+      o.setName('effet')
+       .setDescription('Override l\'effet')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Aucun', value: 'aucun' },
+         { name: 'Particules', value: 'particules' },
+         { name: 'Étoiles', value: 'etoiles' }
+       )),
 
   new SlashCommandBuilder()
     .setName('message')
@@ -90,7 +156,40 @@ const commands = [
     .addBooleanOption(o =>
       o.setName('greenscreen')
        .setDescription('Applique un filtre green screen pour enlever le fond vert')
-       .setRequired(false)),
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('couleur')
+       .setDescription('Override la couleur (ex: red)')
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('police')
+       .setDescription('Override la police')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Impact', value: 'Impact' },
+         { name: 'Comic Sans MS', value: '"Comic Sans MS"' },
+         { name: 'Courier New', value: '"Courier New"' },
+         { name: 'Arial', value: 'Arial' }
+       ))
+    .addStringOption(o =>
+      o.setName('animation')
+       .setDescription('Override l\'animation')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Fondu (Fade)', value: 'fade' },
+         { name: 'Glissement (Slide)', value: 'slide' },
+         { name: 'Rebond (Bounce)', value: 'bounce' },
+         { name: 'Zoom', value: 'zoom' }
+       ))
+    .addStringOption(o =>
+      o.setName('effet')
+       .setDescription('Override l\'effet')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Aucun', value: 'aucun' },
+         { name: 'Particules', value: 'particules' },
+         { name: 'Étoiles', value: 'etoiles' }
+       )),
 
   new SlashCommandBuilder()
     .setName('online')
@@ -119,6 +218,43 @@ const commands = [
       o.setName('cible')
        .setDescription('Le PC cible ("all" ou un pseudo, laissez vide pour voir toutes les files)')
        .setRequired(false)),
+
+  new SlashCommandBuilder()
+    .setName('style')
+    .setDescription('Modifie votre profil d\'affichage (couleur, police, animation) par défaut')
+    .addStringOption(o =>
+      o.setName('couleur')
+       .setDescription('Couleur du texte en hexadécimal (ex: #FF0000) ou nom (ex: red)')
+       .setRequired(false))
+    .addStringOption(o =>
+      o.setName('police')
+       .setDescription('Police d\'écriture pour vos messages')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Impact (Meme)', value: 'Impact' },
+         { name: 'Comic Sans MS (Troll)', value: '"Comic Sans MS"' },
+         { name: 'Courier New (Machine à écrire)', value: '"Courier New"' },
+         { name: 'Arial (Classique)', value: 'Arial' }
+       ))
+    .addStringOption(o =>
+      o.setName('animation')
+       .setDescription('Animation d\'apparition du média/message')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Fondu (Fade)', value: 'fade' },
+         { name: 'Glissement (Slide)', value: 'slide' },
+         { name: 'Rebond (Bounce)', value: 'bounce' },
+         { name: 'Zoom', value: 'zoom' }
+       ))
+    .addStringOption(o =>
+      o.setName('effet')
+       .setDescription('Effet visuel en arrière-plan')
+       .setRequired(false)
+       .addChoices(
+         { name: 'Aucun', value: 'aucun' },
+         { name: 'Particules', value: 'particules' },
+         { name: 'Étoiles', value: 'etoiles' }
+       )),
 
 ].map(cmd => cmd.toJSON());
 
