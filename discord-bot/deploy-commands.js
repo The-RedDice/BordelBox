@@ -221,7 +221,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('style')
-    .setDescription('Ouvre un menu interactif pour modifier votre profil d\'affichage (couleur, police, animation) par défaut'),
+    .setDescription('Ouvre un menu interactif pour personnaliser l\'affichage de vos envois (couleur, animation, police)'),
 
 ].map(cmd => cmd.toJSON());
 
