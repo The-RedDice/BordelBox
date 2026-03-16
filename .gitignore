@@ -19,6 +19,9 @@ client/src-tauri/target/
 *.log
 npm-debug.log*
 
+# ─── Base de données locales / Stats ─────────
+server/stats.json
+
 # ─── OS ─────────────────────────────────────
 .DS_Store
 Thumbs.db

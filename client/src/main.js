@@ -845,9 +845,16 @@ async function checkUpdateAndConnectivity() {
   const notificationContainer = document.getElementById('top-notification');
   if (!notificationContainer) return true; // fallback
 
-  const setNotification = (msg) => {
+  const setNotification = (msg, url = null) => {
     notificationContainer.textContent = msg;
     notificationContainer.classList.add('visible');
+
+    if (url && window.__TAURI__) {
+      notificationContainer.classList.add('clickable');
+      notificationContainer.onclick = () => {
+        window.__TAURI__.plugin.shell.open(url).catch(console.error);
+      };
+    }
   };
 
   // 1. Vérification connexion
@@ -886,8 +893,19 @@ async function checkUpdateAndConnectivity() {
       };
 
       if (isNewer(latestVersion, currentVersion)) {
-        setNotification(`Mise à jour v${latestVersion} disponible`);
+        // Chercher le lien .exe
+        let downloadUrl = data.html_url;
+        if (data.assets && data.assets.length > 0) {
+          const exeAsset = data.assets.find(a => a.name.endsWith('.exe'));
+          if (exeAsset) downloadUrl = exeAsset.browser_download_url;
+        }
 
+        setNotification(`Mise à jour v${latestVersion} disponible`, downloadUrl);
+
+        // Permettre au clic de la notif dans l'overlay via Tauri
+        if (window.__TAURI__) {
+          await window.__TAURI__.core.invoke('set_clickthrough', { enabled: false });
+        }
         return false; // Bloque le démarrage car pas à jour
       }
     }
