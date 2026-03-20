@@ -280,7 +280,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
           await interaction.reply({ content: `❌ ${res.error}`, ephemeral: true });
         } else {
           let msg = `💥 Tu as infligé **${res.damage}** dégâts !`;
-          if (res.defeated) msg += `\n🎉 **LE BOSS EST VAINCU !**`;
+          if (res.defeated) {
+            msg += `\n🎉 **LE BOSS EST VAINCU !**`;
+
+            // Check if user got rewards
+            if (res.rewards) {
+              const userRewardEntry = res.rewards.find(r => r[0] === interaction.user.id);
+              if (userRewardEntry) {
+                msg += `\n💰 Tu as gagné **${userRewardEntry[1]} BordelCoins** pour ta participation !`;
+              } else {
+                msg += `\n*(Tu n'as pas gagné de BordelCoins car ton overlay n'était pas connecté.)*`;
+              }
+            }
+          }
           await interaction.reply({ content: msg, ephemeral: true });
         }
       } catch (err) {
@@ -987,21 +999,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         if (subCmd === 'boss') {
           const name = interaction.options.getString('nom', true);
-          const hp = interaction.options.getInteger('hp', true);
           const imageOpt = interaction.options.getAttachment('image');
           const image = imageOpt ? imageOpt.url : null;
 
-          const res = await apiPost('/event/start', { type: 'boss', name, hp, image, duration: 60000 });
+          const res = await apiPost('/event/start', { type: 'boss', name, image, duration: 60000 });
 
           if (res.error) {
             await interaction.editReply(`❌ Erreur : ${res.error}`);
             return;
           }
 
+          const bossHp = res.event.hp; // HP renvoyés par l'API (dynamique)
+
           const embed = new EmbedBuilder()
             .setColor(0xED4245)
             .setTitle(`⚔️ Un Boss est apparu !`)
-            .setDescription(`**${name}** a **${hp} HP**.\n\nSpammez le bouton pour l'attaquer ! (60 secondes)`);
+            .setDescription(`**${name}** a **${bossHp} HP**.\n\nSpammez le bouton pour l'attaquer ! (60 secondes)\n\n*(Nécessite d'avoir l'overlay ouvert pour obtenir des BordelCoins !)*`);
 
           if (image) embed.setThumbnail(image);
 

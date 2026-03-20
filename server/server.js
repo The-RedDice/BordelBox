@@ -243,7 +243,10 @@ io.on('connection', (socket) => {
   let myPseudo = null;
 
   // Le client s'identifie dès la connexion ou change de pseudo
-  socket.on('identify', ({ pseudo }) => {
+  socket.on('identify', (data) => {
+    const pseudo = data.pseudo;
+    const discordId = data.discordId || null;
+
     if (!pseudo || typeof pseudo !== 'string') {
       socket.disconnect();
       return;
@@ -268,7 +271,7 @@ io.on('connection', (socket) => {
     }
 
     // Met à jour la socket et crée la file si nécessaire
-    clients.set(myPseudo, { socketId: socket.id, busy: false });
+    clients.set(myPseudo, { socketId: socket.id, busy: false, discordId: discordId });
     if (!queues.has(myPseudo)) queues.set(myPseudo, []);
 
     socket.emit('identified', { pseudo: myPseudo });
@@ -301,6 +304,15 @@ io.on('connection', (socket) => {
 
 function getClientList() {
   return Array.from(clients.keys());
+}
+
+// Retourne les Discord IDs de tous les clients connectés qui en ont fourni un
+function getConnectedDiscordIds() {
+  const ids = new Set();
+  for (const client of clients.values()) {
+    if (client.discordId) ids.add(client.discordId);
+  }
+  return ids;
 }
 
 // ─── API interne (utilisée par le bot Discord ET le panel) ───────────────────
@@ -949,12 +961,20 @@ router.post('/ai', requireAuth, async (req, res) => {
 
 // POST /api/event/start
 router.post('/event/start', requireAuth, (req, res) => {
-  const { type, name, hp, image, question, choices, duration } = req.body;
+  const { type, name, image, question, choices, duration } = req.body;
   if (!type || (type !== 'boss' && type !== 'sondage')) {
     return res.status(400).json({ error: 'Type d\'événement invalide (boss ou sondage).' });
   }
 
-  const result = startEvent(io, { type, name, hp, image, question, choices, duration });
+  // Calculate Boss HP based on connected overlay clients
+  let hp = 100;
+  const connectedIds = getConnectedDiscordIds();
+  if (type === 'boss') {
+    hp = Math.max(100, connectedIds.size * 100);
+  }
+
+  // We need to pass the list of connected IDs to the event system to reward players later
+  const result = startEvent(io, { type, name, hp, image, question, choices, duration, connectedIds: Array.from(connectedIds) });
 
   if (result.error) {
     return res.status(400).json(result);
@@ -1065,4 +1085,4 @@ server.listen(PORT, () => {
 });
 
 // Exporter pour que le bot puisse accéder aux helpers
-module.exports = { enqueue, getClientList, downloadMedia, io };
+module.exports = { enqueue, getClientList, getConnectedDiscordIds, downloadMedia, io };

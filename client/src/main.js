@@ -859,7 +859,7 @@ function connectSocket() {
 
   socket.on('connect', () => {
     console.log('[BordelBox] Connecté :', CONFIG.pseudo);
-    socket.emit('identify', { pseudo: CONFIG.pseudo });
+    socket.emit('identify', { pseudo: CONFIG.pseudo, discordId: CONFIG.discordId });
   });
 
   socket.on('show', (item) => showItem(item));
@@ -867,6 +867,89 @@ function connectSocket() {
   socket.on('force_skip', () => {
     hideAll();
     socket.emit('media_ended');
+  });
+
+  // ─── Événements Interactifs ───
+  function updateBossHp(currentHp, maxHp) {
+    const pct = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
+    const fill = document.getElementById('boss-hp-fill');
+    const text = document.getElementById('boss-hp-text');
+    if (fill) fill.style.width = pct + '%';
+    if (text) text.textContent = `${currentHp} / ${maxHp} HP`;
+  }
+
+  function updateSondageUI(event) {
+    const container = document.getElementById('sondage-choices');
+    if (!container) return;
+    container.innerHTML = '';
+
+    event.choices.forEach((choice, idx) => {
+      const votes = event.votes[idx] || 0;
+      const pct = event.totalVotes > 0 ? (votes / event.totalVotes) * 100 : 0;
+
+      const div = document.createElement('div');
+      div.className = 'sondage-choice';
+      div.innerHTML = `
+        <div class="sondage-label">
+          <span>${choice}</span>
+          <span>${votes} (${Math.round(pct)}%)</span>
+        </div>
+        <div class="sondage-bar-bg">
+          <div class="sondage-bar-fill" style="width: ${pct}%"></div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  socket.on('event_start', (event) => {
+    const eventContainer = document.getElementById('event-container');
+    const eventBoss = document.getElementById('event-boss');
+    const eventSondage = document.getElementById('event-sondage');
+
+    eventContainer.classList.add('visible');
+
+    if (event.type === 'boss') {
+      eventBoss.style.display = 'block';
+      eventSondage.style.display = 'none';
+
+      document.getElementById('boss-name').textContent = event.name;
+      const imageUrl = event.image || 'https://cdn-icons-png.flaticon.com/512/1004/1004305.png';
+
+      const faces = document.querySelectorAll('#boss-cube .face');
+      faces.forEach(face => {
+        face.style.backgroundImage = `url(${imageUrl})`;
+      });
+
+      updateBossHp(event.currentHp, event.hp);
+    }
+    else if (event.type === 'sondage') {
+      eventBoss.style.display = 'none';
+      eventSondage.style.display = 'block';
+
+      document.getElementById('sondage-question').textContent = event.question;
+      updateSondageUI(event);
+    }
+  });
+
+  socket.on('event_update', (event) => {
+    if (event.type === 'boss') {
+      updateBossHp(event.currentHp, event.hp);
+    } else if (event.type === 'sondage') {
+      updateSondageUI(event);
+    }
+  });
+
+  socket.on('event_end', (event) => {
+    const eventContainer = document.getElementById('event-container');
+    if (event.type === 'boss' && event.currentHp <= 0) {
+      document.getElementById('boss-hp-text').textContent = 'VAINCU !';
+      setTimeout(() => {
+        eventContainer.classList.remove('visible');
+      }, 3000);
+    } else {
+      eventContainer.classList.remove('visible');
+    }
   });
 
   socket.on('voteskip_update', (data) => {
