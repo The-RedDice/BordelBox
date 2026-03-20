@@ -38,7 +38,7 @@ async function generateResponse(prompt) {
     return text;
   } catch (err) {
     console.error('[Gemini AI] Erreur de génération :', err);
-    throw new Error('Erreur lors de la génération IA.');
+    throw new Error('Erreur lors de la génération IA: ' + (err.message || err));
   }
 }
 
