@@ -214,6 +214,27 @@ function spendCoins(userId, amount) {
 }
 
 /**
+ * Ajouter des BordelCoins à un utilisateur
+ */
+function addCoins(userId, amount) {
+  if (!userId || !stats[userId]) return false;
+
+  if (stats[userId].bordelCoins === undefined) {
+    stats[userId].bordelCoins = stats[userId].reputation || 0;
+    delete stats[userId].reputation;
+  }
+
+  stats[userId].bordelCoins += amount;
+
+  if (stats[userId].bordelCoins < 0) {
+    stats[userId].bordelCoins = 0;
+  }
+
+  saveStats();
+  return true;
+}
+
+/**
  * Ajouter des éléments débloqués au profil de l'utilisateur
  */
 function unlockStyleItem(userId, type, itemValue) {
@@ -317,6 +338,7 @@ module.exports = {
   getUserProfile,
   updateReputation,
   spendCoins,
+  addCoins,
   unlockStyleItem,
   getUnlockedStyles
 };

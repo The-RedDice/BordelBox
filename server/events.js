@@ -78,8 +78,25 @@ function interactEvent(io, interactionData) {
       updated = true;
       const serializableEvent = { ...activeEvent, participants: Array.from(activeEvent.participants) };
       io.emit('event_update', serializableEvent);
-      endEvent(io, { reason: 'defeated', participants: Array.from(activeEvent.participants) });
-      return { ok: true, damage, defeated: true, eventId: activeEvent.id };
+
+      const wonCoins = new Map();
+      const stats = require('./stats');
+      const { getConnectedDiscordIds } = require('./server');
+
+      // Obtenir la liste *actuelle* des IDs Discord connectés à l'overlay
+      const connectedNow = getConnectedDiscordIds();
+
+      // Récompenser les joueurs connectés qui ont participé
+      for (const pId of activeEvent.participants) {
+        if (connectedNow.has(pId)) {
+          const reward = Math.floor(Math.random() * 16) + 5; // Entre 5 et 20 coins
+          stats.addCoins(pId, reward);
+          wonCoins.set(pId, reward);
+        }
+      }
+
+      endEvent(io, { reason: 'defeated', participants: Array.from(activeEvent.participants), coinsMap: Array.from(wonCoins.entries()) });
+      return { ok: true, damage, defeated: true, eventId: activeEvent.id, rewards: Array.from(wonCoins.entries()) };
     }
     updated = true;
   }

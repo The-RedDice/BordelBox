@@ -221,7 +221,6 @@ const commands = [
         .setName('boss')
         .setDescription('Fait apparaître un Boss à vaincre')
         .addStringOption(option => option.setName('nom').setDescription('Nom du Boss').setRequired(true))
-        .addIntegerOption(option => option.setName('hp').setDescription('Points de vie (ex: 500)').setRequired(true))
         .addAttachmentOption(option => option.setName('image').setDescription('Image du Boss').setRequired(false)))
     .addSubcommand(subcommand =>
       subcommand

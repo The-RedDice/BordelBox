@@ -17,6 +17,7 @@ async function init() {
     const config = JSON.parse(raw);
 
     document.getElementById('pseudo').value    = config.pseudo    || '';
+    document.getElementById('discordId').value = config.discordId || '';
     document.getElementById('serverUrl').value = config.serverUrl || 'http://141.145.200.136:8123';
 
     const msgSize = config.messageSize ?? config.textSize ?? 8;
@@ -207,6 +208,7 @@ document.getElementById('shortcut').addEventListener('keydown', (e) => handleSho
 window.saveOptions = async function () {
   const config = {
     pseudo:      document.getElementById('pseudo').value.trim().toLowerCase(),
+    discordId:   document.getElementById('discordId').value.trim(),
     serverUrl:   document.getElementById('serverUrl').value.trim().replace(/\/$/, ''),
     messageSize: parseFloat(document.getElementById('messageSize').value),
     captionSize: parseFloat(document.getElementById('captionSize').value),

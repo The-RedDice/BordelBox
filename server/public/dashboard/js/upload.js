@@ -126,6 +126,16 @@ async function sendMeme(name, memeData) {
   document.body.appendChild(notif);
 
   try {
+    // Fetch user context if available
+    let userId = null;
+    try {
+      const userRes = await fetch('/auth/me');
+      if (userRes.ok) {
+        const udata = await userRes.json();
+        userId = udata.id;
+      }
+    } catch (e) {}
+
     // Send via API - similar to how Discord Bot /meme play works
     const payload = {
       fileUrl: memeData.url,
@@ -135,6 +145,8 @@ async function sendMeme(name, memeData) {
       greenscreen: memeData.greenscreen || false,
       filter: memeData.filter || ''
     };
+
+    if (userId) payload.userId = userId;
 
     // We don't have user styling/TTS straight from the dashboard yet, but the backend requireAuth handles identity
     const res = await fetch('/api/sendfile', {

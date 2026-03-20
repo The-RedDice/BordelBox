@@ -600,11 +600,158 @@
     }
 
     #audio-player { position: fixed; width: 0; height: 0; pointer-events: none; }
+
+    /* ─── Événements Interactifs (Boss / Sondage) ─── */
+    #event-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      background: rgba(15, 15, 20, 0.85);
+      border: 2px solid #ff3c6e;
+      border-radius: 12px;
+      padding: 16px;
+      color: white;
+      font-family: 'Arial', sans-serif;
+      box-shadow: 0 0 20px rgba(255, 60, 110, 0.4);
+      z-index: 50;
+      display: none;
+      backdrop-filter: blur(8px);
+    }
+    #event-container.visible { display: block; animation: event-slide-in 0.5s ease-out; }
+    @keyframes event-slide-in {
+      from { transform: translateX(120%); }
+      to { transform: translateX(0); }
+    }
+
+    #event-boss, #event-sondage { text-align: center; display: none; }
+
+    #boss-name, #sondage-question {
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* ─── Cube 3D ─── */
+    .cube-scene {
+      width: 120px;
+      height: 120px;
+      margin: 20px auto;
+      perspective: 600px;
+    }
+    .cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: spin3d 4s linear infinite;
+    }
+    .face {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ff3c6e;
+      box-shadow: inset 0 0 15px rgba(255, 60, 110, 0.5);
+      background-size: cover;
+      background-position: center;
+      image-rendering: pixelated;
+    }
+    .front  { transform: rotateY(0deg) translateZ(60px); }
+    .back   { transform: rotateY(180deg) translateZ(60px); }
+    .right  { transform: rotateY(90deg) translateZ(60px); }
+    .left   { transform: rotateY(-90deg) translateZ(60px); }
+    .top    { transform: rotateX(90deg) translateZ(60px); }
+    .bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+    @keyframes spin3d {
+      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(0deg); }
+    }
+
+    /* ─── Barre de HP ─── */
+    .hp-bar-container {
+      width: 100%;
+      height: 15px;
+      background: #333;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 10px;
+      border: 1px solid #000;
+    }
+    #boss-hp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0000, #ff3c6e);
+      width: 100%;
+      transition: width 0.2s ease-out;
+    }
+    #boss-hp-text {
+      margin-top: 5px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    /* ─── Sondage UI ─── */
+    .sondage-choice {
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .sondage-label {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .sondage-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #333;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .sondage-bar-fill {
+      height: 100%;
+      background: #5865F2; /* Discord Blurple */
+      width: 0%;
+      transition: width 0.3s ease-out;
+    }
   </style>
 </head>
 <body>
 
   <div id="top-notification"></div>
+
+  <!-- ─── Conteneur des Événements Interactifs ─── -->
+  <div id="event-container">
+    <!-- Event Boss -->
+    <div id="event-boss" style="display: none;">
+      <h2 id="boss-name">Monstre Inconnu</h2>
+
+      <div class="cube-scene">
+        <div class="cube" id="boss-cube">
+          <div class="face front"></div>
+          <div class="face back"></div>
+          <div class="face right"></div>
+          <div class="face left"></div>
+          <div class="face top"></div>
+          <div class="face bottom"></div>
+        </div>
+      </div>
+
+      <div class="hp-bar-container">
+        <div id="boss-hp-fill"></div>
+      </div>
+      <div id="boss-hp-text">100 / 100 HP</div>
+    </div>
+
+    <!-- Event Sondage -->
+    <div id="event-sondage" style="display: none;">
+      <h2 id="sondage-question">Question ?</h2>
+      <div id="sondage-choices"></div>
+    </div>
+  </div>
 
   <div id="media-container">
     <video id="media-video" crossorigin="anonymous" autoplay playsinline></video>
