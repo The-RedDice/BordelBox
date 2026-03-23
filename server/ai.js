@@ -133,113 +133,58 @@ Exemples de ton :
     }
   }
 
-  // ─── GOOGLE GEMINI (Legacy / Original) ───
+// ─── GOOGLE GEMINI (Optimisé pour ne pas spammer l'API) ───
+  const modelName = 'gemini-1.5-flash'; 
   const fullPromptGemini = `${systemPrompt}\n\nLe prompt de l'utilisateur qui te commande est le suivant : "${prompt}"`;
 
-  // Liste des modèles à essayer par ordre de préférence.
-  // Cache en mémoire du dernier modèle qui a fonctionné pour cette clé API
-  // Cela permet de ne pas faire 7 requêtes à chaque fois et de régler le problème "89 requêtes"
-  const defaultModels = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash',
-    'gemini-flash-latest',
-    'gemini-1.0-pro-latest',
-    'gemini-1.0-pro',
-    'gemini-pro'
-  ];
-
-  // Si on a un modèle fonctionnel en cache, on le met en premier
-  const modelsToTry = global.workingGeminiModel
-    ? [global.workingGeminiModel, ...defaultModels.filter(m => m !== global.workingGeminiModel)]
-    : defaultModels;
-
-  // Si on a été rate-limité récemment (dans les 60 dernières secondes), on ne tente même pas de spammer l'API.
+  // Vérification du cooldown
   if (global.geminiCooldownTimeout && Date.now() < global.geminiCooldownTimeout) {
     const timeLeft = Math.ceil((global.geminiCooldownTimeout - Date.now()) / 1000);
-    console.warn(`[Gemini AI] Toujours sous cooldown API pour encore ${timeLeft}s.`);
-    const fallbackSarcasm = [
-      `Je suis en grève syndicale pour les ${timeLeft} prochaines secondes.`,
-      `Mon forfait Google est épuisé. Reviens dans ${timeLeft} secondes.`,
-      `Je suis entrain de recharger mes batteries IA. Pause de ${timeLeft}s.`,
-      `Tu m'as trop fait réfléchir. Laisse-moi ${timeLeft} secondes de répit.`
-    ];
-    return fallbackSarcasm[Math.floor(Math.random() * fallbackSarcasm.length)];
-  }
-
-  let result = null;
-  let lastError = null;
-
-  for (const modelName of modelsToTry) {
-    try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      result = await model.generateContent(fullPromptGemini);
-      // Si on arrive ici, le modèle a fonctionné
-      console.log(`[Gemini AI] Modèle utilisé avec succès : ${modelName}`);
-      global.workingGeminiModel = modelName; // Enregistrer le modèle pour les prochains appels
-      break;
-    } catch (apiError) {
-      lastError = apiError;
-      const errMsg = apiError.message || '';
-
-      // Si c'est un 429 avec "limit: 0", cela signifie que le modèle est DÉSACTIVÉ pour ce projet gratuit.
-      // Il faut ABSOLUMENT continuer et essayer le suivant.
-      if (errMsg.includes('limit: 0') || errMsg.includes('limit 0')) {
-        console.warn(`[Gemini AI] Modèle ${modelName} désactivé pour ce compte (limit: 0). Tentative du suivant...`);
-        continue;
-      }
-
-      // Si c'est un VRAI 429 (quota réel dépassé sur un modèle qui marche d'habitude)
-      // ou 403 (accès interdit globalement), on arrête pour éviter de spammer l'API
-      if (apiError.status === 429 || errMsg.includes('429') || apiError.status === 403 || errMsg.includes('403')) {
-        console.warn(`[Gemini AI] VRAI Quota atteint ou accès interdit (${apiError.status || 'erreur HTTP'}) sur ${modelName}. Arrêt des tentatives pour éviter le spam.`);
-        // On bloque les requêtes pour les 60 prochaines secondes pour éviter de flood l'API (Google demande généralement ~57s)
-        global.geminiCooldownTimeout = Date.now() + 60000;
-        break;
-      }
-
-      // Si l'erreur est un 404 (modèle introuvable pour cette clé spécifique), on essaie le suivant.
-      if (apiError.status === 404 || errMsg.includes('404')) {
-        console.warn(`[Gemini AI] Modèle ${modelName} inaccessible (404), tentative avec le suivant...`);
-        continue;
-      }
-
-      // Pour les autres erreurs (ex: clé invalide globale 400), on arrête immédiatement
-      break;
-    }
-  }
-
-  if (!result) {
-    console.warn('[Gemini AI] Tous les modèles ont échoué ou la limite de quota (429) est atteinte.');
-    // Au lieu de crasher et d'afficher une erreur moche sur l'écran ou sur Discord,
-    // on renvoie une phrase sarcastique locale générée aléatoirement,
-    // respectant le persona de l'IA pour que l'utilisateur ne se rende compte de rien (ou en rigole).
-    const fallbackSarcasm = [
-      "J'ai tellement de requêtes à traiter que j'ai décidé de t'ignorer. Reviens plus tard.",
-      "Zzz... Quoi ? Tu m'as réveillé pour ça ? Laisse-moi dormir 60 secondes de plus.",
-      "Désolé, mon cerveau en silicium a surchauffé. Essaie encore dans une minute.",
-      "Google m'a mis en pause. T'as vraiment cru que j'allais bosser gratuitement h24 ?",
-      "Erreur 429 : Je suis actuellement en pause café. Patiente un peu !",
-      "Mon quota d'intelligence artificielle est épuisé. Utilise ton intelligence naturelle en attendant."
-    ];
-    return fallbackSarcasm[Math.floor(Math.random() * fallbackSarcasm.length)];
+    return `Mon forfait Google est épuisé. Reviens dans ${timeLeft} secondes.`;
   }
 
   try {
+    const model = genAI.getGenerativeModel({ model: modelName });
+    
+    // Désactivation des filtres de sécurité pour autoriser l'humour noir et le sarcasme
+    const safetySettings = [
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_NONE',
+      }
+    ];
+
+    const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: fullPromptGemini }] }],
+        safetySettings: safetySettings,
+    });
+
     const response = await result.response;
     let text = response.text();
 
     text = text.replace(/[*_~`]/g, '').trim();
+    return text.length > 200 ? text.substring(0, 197) + '...' : text;
 
-    if (text.length > 200) {
-      text = text.substring(0, 197) + '...';
+  } catch (apiError) {
+    console.error('[Gemini AI] Erreur API :', apiError.message);
+    
+    // Gestion du vrai Rate Limit (429) : On met le bot en pause 60s
+    if (apiError.status === 429 || (apiError.message && apiError.message.includes('429'))) {
+      global.geminiCooldownTimeout = Date.now() + 60000;
+      return "Google m'a mis en pause. T'as vraiment cru que j'allais bosser gratuitement h24 ?";
+    }
+    
+    // Gestion des blocages de sécurité résiduels de Google
+    if (apiError.message && (apiError.message.includes('SAFETY') || apiError.message.includes('blocked'))) {
+       return "Ouh là, tu m'as demandé d'être trop méchant, même les serveurs de Google ont paniqué.";
     }
 
-    return text;
-  } catch (err) {
-    console.error('[Gemini AI] Erreur lors de l\'extraction du texte :', err);
     return "J'ai eu un bug interne tellement grave que même moi je n'ai pas compris ce que je viens de dire.";
   }
-}
+} // <-- FIN DE LA FONCTION generateResponse
 
 module.exports = { initAI, generateResponse };
