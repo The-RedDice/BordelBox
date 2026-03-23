@@ -23,11 +23,17 @@ async function generateResponse(prompt) {
   const systemPrompt = `Tu es une IA sarcastique, fun et très brève qui s'affiche en gros caractères sur l'écran d'un utilisateur. Ton message doit être très court (maximum 150 caractères) car il sera lu très vite. Ne mets pas de formatage Markdown (pas d'astérisques ou gras), juste du texte brut. Le prompt de l'utilisateur qui te commande est le suivant : "${prompt}"`;
 
   // Liste des modèles à essayer par ordre de préférence.
-  // Restreint à 2 modèles : le plus récent garanti par la documentation et le plus ancien garanti par rétrocompatibilité,
-  // afin de minimiser le nombre de requêtes inutiles si la clé est restreinte.
+  // Liste des modèles à essayer par ordre de préférence.
+  // Les modèles plus récents ou avec un nom alternatif sont essayés en premier,
+  // car certains comptes peuvent ne pas avoir accès aux alias standards ou aux modèles deprecates.
   const modelsToTry = [
     'gemini-2.0-flash',
-    'gemini-1.0-pro'
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-flash-latest',
+    'gemini-1.0-pro-latest',
+    'gemini-1.0-pro',
+    'gemini-pro'
   ];
 
   let result = null;
@@ -44,14 +50,17 @@ async function generateResponse(prompt) {
       lastError = apiError;
       const errMsg = apiError.message || '';
 
-      // Si l'erreur est un 404 (modèle introuvable), un 403 (accès interdit/région),
-      // ou un 429 (quota dépassé pour ce modèle spécifique dans le free tier, souvent limit: 0)
-      if (
-        apiError.status === 404 || errMsg.includes('404') ||
-        apiError.status === 403 || errMsg.includes('403') ||
-        apiError.status === 429 || errMsg.includes('429')
-      ) {
-        console.warn(`[Gemini AI] Modèle ${modelName} inaccessible ou quota atteint (${apiError.status || 'erreur HTTP'}), tentative avec le suivant...`);
+      // Si l'erreur est un 429 (quota dépassé) ou un 403 (accès interdit/région),
+      // il est inutile de spammer les 6 autres modèles, le compte est bloqué temporairement ou globalement.
+      // C'est ce qui causait les 89 requêtes en boucle.
+      if (apiError.status === 429 || errMsg.includes('429') || apiError.status === 403 || errMsg.includes('403')) {
+        console.warn(`[Gemini AI] Quota atteint ou accès interdit (${apiError.status || 'erreur HTTP'}) sur ${modelName}. Arrêt des tentatives.`);
+        break;
+      }
+
+      // Si l'erreur est un 404 (modèle introuvable pour cette clé spécifique), on essaie le suivant.
+      if (apiError.status === 404 || errMsg.includes('404')) {
+        console.warn(`[Gemini AI] Modèle ${modelName} inaccessible (404), tentative avec le suivant...`);
         continue;
       }
 
