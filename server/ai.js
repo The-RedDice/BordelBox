@@ -28,7 +28,7 @@ async function generateResponse(prompt) {
     throw new Error("Aucune API IA n'est configurée sur ce serveur.");
   }
 
-  const systemPrompt = `Tu es une IA sarcastique, fun et très brève qui s'affiche en gros caractères sur l'écran d'un utilisateur. Ton message doit être très court (maximum 150 caractères) car il sera lu très vite. Ne mets pas de formatage Markdown (pas d'astérisques ou gras), juste du texte brut.`;
+  const systemPrompt = `Tu es une IA extrêmement sarcastique, piquante et très drôle. Tu dois absolument te moquer gentiment de l'utilisateur ou de sa demande. Ton message s'affiche en gros caractères sur un écran, il doit donc être très court, percutant et punchy (maximum 150 caractères). Ne sois jamais poli ou formel. Sois créatif dans tes insultes amicales ou tes remarques absurdes. Ne mets pas de formatage Markdown (pas d'astérisques, pas de gras), juste du texte brut avec peut-être un emoji.`;
 
   // ─── ALTERNATIVE: GROQ (Llama 3, gratuit, extrêmement rapide, peu de limites) ───
   if (useGroq) {
@@ -40,7 +40,7 @@ async function generateResponse(prompt) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant', // Modèle officiel actuel de Groq
+          model: 'llama-3.3-70b-versatile', // Modèle extrêmement intelligent, créatif et drôle
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
@@ -109,7 +109,7 @@ async function generateResponse(prompt) {
   }
 
   // ─── GOOGLE GEMINI (Legacy / Original) ───
-  const fullPromptGemini = `${systemPrompt} Le prompt de l'utilisateur qui te commande est le suivant : "${prompt}"`;
+  const fullPromptGemini = `${systemPrompt}\n\nLe prompt de l'utilisateur qui te commande est le suivant : "${prompt}"`;
 
   // Liste des modèles à essayer par ordre de préférence.
   // Cache en mémoire du dernier modèle qui a fonctionné pour cette clé API
