@@ -51,7 +51,7 @@ Exemples de ton :
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile', // Modèle principal garanti de fonctionner
+          model: 'qwen/qwen3-32b', // Modèle principal garanti de fonctionner
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
@@ -100,7 +100,7 @@ Exemples de ton :
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-          ]
+          ],
         })
       });
 
