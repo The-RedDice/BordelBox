@@ -23,10 +23,9 @@ async function generateResponse(prompt) {
   const systemPrompt = `Tu es une IA sarcastique, fun et très brève qui s'affiche en gros caractères sur l'écran d'un utilisateur. Ton message doit être très court (maximum 150 caractères) car il sera lu très vite. Ne mets pas de formatage Markdown (pas d'astérisques ou gras), juste du texte brut. Le prompt de l'utilisateur qui te commande est le suivant : "${prompt}"`;
 
   // Liste des modèles à essayer par ordre de préférence.
-  // Liste des modèles à essayer par ordre de préférence.
-  // Les modèles plus récents ou avec un nom alternatif sont essayés en premier,
-  // car certains comptes peuvent ne pas avoir accès aux alias standards ou aux modèles deprecates.
-  const modelsToTry = [
+  // Cache en mémoire du dernier modèle qui a fonctionné pour cette clé API
+  // Cela permet de ne pas faire 7 requêtes à chaque fois et de régler le problème "89 requêtes"
+  const defaultModels = [
     'gemini-2.0-flash',
     'gemini-1.5-flash-latest',
     'gemini-1.5-flash',
@@ -35,6 +34,11 @@ async function generateResponse(prompt) {
     'gemini-1.0-pro',
     'gemini-pro'
   ];
+
+  // Si on a un modèle fonctionnel en cache, on le met en premier
+  const modelsToTry = global.workingGeminiModel
+    ? [global.workingGeminiModel, ...defaultModels.filter(m => m !== global.workingGeminiModel)]
+    : defaultModels;
 
   let result = null;
   let lastError = null;
@@ -45,16 +49,23 @@ async function generateResponse(prompt) {
       result = await model.generateContent(systemPrompt);
       // Si on arrive ici, le modèle a fonctionné
       console.log(`[Gemini AI] Modèle utilisé avec succès : ${modelName}`);
+      global.workingGeminiModel = modelName; // Enregistrer le modèle pour les prochains appels
       break;
     } catch (apiError) {
       lastError = apiError;
       const errMsg = apiError.message || '';
 
-      // Si l'erreur est un 429 (quota dépassé) ou un 403 (accès interdit/région),
-      // il est inutile de spammer les 6 autres modèles, le compte est bloqué temporairement ou globalement.
-      // C'est ce qui causait les 89 requêtes en boucle.
+      // Si c'est un 429 avec "limit: 0", cela signifie que le modèle est DÉSACTIVÉ pour ce projet gratuit.
+      // Il faut ABSOLUMENT continuer et essayer le suivant.
+      if (errMsg.includes('limit: 0') || errMsg.includes('limit 0')) {
+        console.warn(`[Gemini AI] Modèle ${modelName} désactivé pour ce compte (limit: 0). Tentative du suivant...`);
+        continue;
+      }
+
+      // Si c'est un VRAI 429 (quota réel dépassé sur un modèle qui marche d'habitude)
+      // ou 403 (accès interdit globalement), on arrête pour éviter de spammer l'API
       if (apiError.status === 429 || errMsg.includes('429') || apiError.status === 403 || errMsg.includes('403')) {
-        console.warn(`[Gemini AI] Quota atteint ou accès interdit (${apiError.status || 'erreur HTTP'}) sur ${modelName}. Arrêt des tentatives.`);
+        console.warn(`[Gemini AI] VRAI Quota atteint ou accès interdit (${apiError.status || 'erreur HTTP'}) sur ${modelName}. Arrêt des tentatives pour éviter le spam.`);
         break;
       }
 
