@@ -97,8 +97,6 @@ Exemples de ton :
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 150,
-          temperature: 0.8
         })
       });
 
