@@ -47,12 +47,20 @@ async function generateResponse(prompt) {
       break;
     } catch (apiError) {
       lastError = apiError;
-      // Si l'erreur est un 404 (modèle introuvable ou non supporté), on essaie le modèle suivant
-      if (apiError.status === 404 || (apiError.message && apiError.message.includes('404'))) {
-        console.warn(`[Gemini AI] Modèle ${modelName} non trouvé (404), tentative avec le suivant...`);
+      const errMsg = apiError.message || '';
+
+      // Si l'erreur est un 404 (modèle introuvable), un 403 (accès interdit/région),
+      // ou un 429 (quota dépassé pour ce modèle spécifique dans le free tier, souvent limit: 0)
+      if (
+        apiError.status === 404 || errMsg.includes('404') ||
+        apiError.status === 403 || errMsg.includes('403') ||
+        apiError.status === 429 || errMsg.includes('429')
+      ) {
+        console.warn(`[Gemini AI] Modèle ${modelName} inaccessible ou quota atteint (${apiError.status || 'erreur HTTP'}), tentative avec le suivant...`);
         continue;
       }
-      // Pour toute autre erreur (ex: clé invalide, quota dépassé), on arrête immédiatement
+
+      // Pour les autres erreurs (ex: clé invalide globale 400), on arrête immédiatement
       break;
     }
   }
