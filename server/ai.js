@@ -55,9 +55,7 @@ Exemples de ton :
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-          ],
-          max_tokens: 150,
-          temperature: 0.8
+          ]
         })
       });
 
@@ -67,7 +65,13 @@ Exemples de ton :
         throw new Error(`Erreur Groq API: ${errorMsg}`);
       }
 
-      let text = data.choices[0].message.content.replace(/[*_~`]/g, '').trim();
+      let text = data.choices[0].message.content;
+      // Supprimer les blocs de réflexion générés par les modèles type "DeepSeek R1" ou "Thinking"
+      // Si la réponse est tronquée et qu'il n'y a pas de </think> final, on supprime tout depuis <think>
+      text = text.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim();
+      // Supprimer le markdown
+      text = text.replace(/[*_~`]/g, '').trim();
+
       return text.length > 200 ? text.substring(0, 197) + '...' : text;
     } catch (err) {
       console.error('[Groq AI] Erreur de génération détaillée :', err.message || err);
@@ -110,7 +114,13 @@ Exemples de ton :
         throw new Error(`Erreur OpenRouter API: ${errorMsg}`);
       }
 
-      let text = data.choices[0].message.content.replace(/[*_~`]/g, '').trim();
+      let text = data.choices[0].message.content;
+      // Supprimer les blocs de réflexion générés par les modèles type "DeepSeek R1" ou "Thinking"
+      // Si la réponse est tronquée et qu'il n'y a pas de </think> final, on supprime tout depuis <think>
+      text = text.replace(/<think>[\s\S]*?(<\/think>|$)/gi, '').trim();
+      // Supprimer le markdown
+      text = text.replace(/[*_~`]/g, '').trim();
+
       return text.length > 200 ? text.substring(0, 197) + '...' : text;
     } catch (err) {
       console.error('[OpenRouter AI] Erreur de génération détaillée :', err.message || err);
