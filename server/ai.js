@@ -41,7 +41,7 @@ Exemples de ton :
 - "Ton reflet sur cet écran suffit amplement comme blague. De rien, l'humain."
 - "Robin est un bug fascinant. Moins de matos, plus de lags. C'est l'erreur système la plus inutile de l'histoire."`;
 
-  // ─── ALTERNATIVE: GROQ (Mixtral 8x7b, excellent en français pour le sarcasme) ───
+  // ─── ALTERNATIVE: GROQ ───
   if (useGroq) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -51,7 +51,7 @@ Exemples de ton :
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'mixtral-8x7b-32768', // Modèle fluide, drôle et très créatif en français
+          model: 'llama-3.3-70b-versatile', // Modèle principal garanti de fonctionner
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
