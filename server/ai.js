@@ -24,11 +24,12 @@ async function generateResponse(prompt) {
 
   // Liste des modèles à essayer par ordre de préférence.
   // Restreint à 3 modèles courants pour éviter de saturer l'API en cas de limite de quota,
-  // tout en utilisant des alias qui fonctionnent sur la plupart des clés API.
+  // tout en utilisant des alias qui fonctionnent sur la plupart des clés API,
+  // et en incluant 'gemini-pro' comme filet de sécurité pour les anciens comptes.
   const modelsToTry = [
     'gemini-2.0-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.0-pro'
+    'gemini-1.5-pro-latest',
+    'gemini-pro'
   ];
 
   let result = null;
