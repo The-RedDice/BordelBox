@@ -92,7 +92,7 @@ Exemples de ton :
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-exp:free', // Modèle le plus stable des Gemini gratuits sur OpenRouter
+          model: 'mistralai/mistral-7b-instruct:free', // Modèle gratuit garanti sur OpenRouter sans vérification de numéro de téléphone
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
@@ -103,6 +103,10 @@ Exemples de ton :
       const data = await res.json();
       if (!res.ok || data.error) {
         const errorMsg = data.error ? (data.error.message || JSON.stringify(data.error)) : `HTTP ${res.status}`;
+        // Message d'aide pour l'admin dans les logs
+        if (errorMsg.includes('402') || errorMsg.includes('credit') || errorMsg.includes('verify')) {
+           console.error('[OpenRouter AI] INFO: Votre compte OpenRouter nécessite probablement une vérification (numéro de téléphone) ou un crédit de $1 pour utiliser certains modèles gratuits.');
+        }
         throw new Error(`Erreur OpenRouter API: ${errorMsg}`);
       }
 
