@@ -92,7 +92,7 @@ Exemples de ton :
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'nousresearch/hermes-3-llama-3.1-405b:free', // Modèle gratuit extrêmement stable et rapide sur OpenRouter
+          model: 'qwen/qwen3-next-80b-a3b-instruct:free', // Modèle gratuit extrêmement stable et rapide sur OpenRouter
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
