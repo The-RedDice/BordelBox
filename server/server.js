@@ -24,7 +24,7 @@ const { addMeme, getUserMemes, removeMeme } = require('./memes');
 const { initAI, generateResponse } = require('./ai');
 const { getInventory, addLootbox, openLootbox, equipItem, getItemsDb } = require('./stats');
 const { getListings, createListing, buyListing, cancelListing } = require('./market');
-const { createTradeRequest, updateTradeOffer, acceptTrade, declineTrade, getTrade } = require('./trade');
+const { createTradeRequest, updateTradeOffer, acceptTrade, declineTrade, getTrade, getPendingTrades } = require('./trade');
 const { startEvent, interactEvent, getActiveEvent } = require('./events');
 
 // Initialiser l'API IA
@@ -697,6 +697,20 @@ router.get('/trade/:tradeId', requireAuth, (req, res) => {
   const trade = getTrade(req.params.tradeId);
   if (!trade) return res.status(404).json({ error: "Échange introuvable." });
   res.json({ trade });
+});
+
+router.get('/trades/me', requireAuth, (req, res) => {
+  let userId;
+  // Handling bot basic auth or discord user auth
+  if (req.user && req.user.id) {
+    userId = req.user.id;
+  } else if (req.query.userId) {
+    userId = req.query.userId;
+  }
+
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  const pending = getPendingTrades(userId);
+  res.json({ pending });
 });
 
 // ─── API Marketplace ─────────────────────────────────────────────────────────

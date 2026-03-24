@@ -49,6 +49,9 @@ async function checkAuthStatus() {
 
       // Load Memes for Soundboard
       loadMemes();
+
+      // Load pending trades
+      loadTrades(data.user.id);
     } else {
       document.getElementById('login-card').classList.remove('hidden');
       document.getElementById('upload-form').classList.add('hidden');
@@ -187,6 +190,68 @@ async function sendMeme(name, memeData) {
     notif.style.opacity = '0';
     setTimeout(() => notif.remove(), 300);
   }, 3000);
+}
+
+async function loadTrades(userId) {
+  const container = document.getElementById('trade-container');
+  try {
+    const res = await fetch(`/trades/me?userId=${userId}`);
+    if (!res.ok) throw new Error('Failed to load trades');
+    const data = await res.json();
+    const trades = data.pending || [];
+
+    container.innerHTML = '';
+
+    if (trades.length === 0) {
+      container.innerHTML = '<div style="color: #aaa; text-align: center; grid-column: 1 / -1; padding: 20px;">Aucune offre d\'échange en cours.</div>';
+      return;
+    }
+
+    trades.forEach(trade => {
+      const isSender = trade.senderId === userId;
+      const partnerName = isSender ? trade.receiverName : trade.senderName;
+      const statusLabel = isSender ? 'Offre envoyée à' : 'Offre reçue de';
+
+      const div = document.createElement('div');
+      div.className = 'trade-card';
+      div.style.background = 'var(--color-bg)';
+      div.style.padding = '15px';
+      div.style.borderRadius = '8px';
+      div.style.border = '1px solid var(--color-border)';
+
+      div.innerHTML = `
+        <h4 style="margin-bottom: 10px; color: var(--color-primary);">${statusLabel} ${partnerName}</h4>
+        <div style="font-size: 0.9em; color: #ccc; margin-bottom: 15px;">ID: ${trade.id}</div>
+        <div style="display: flex; gap: 10px;">
+           <button class="btn btn-primary" onclick="window.alert('L\\'interface détaillée de modification des objets arrive très bientôt !')">Modifier / Voir</button>
+           <button class="btn btn-danger" onclick="declineTrade('${trade.id}', '${userId}')">Refuser / Annuler</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Erreur loadTrades:", err);
+    container.innerHTML = '<div style="color: #ff3c6e; text-align: center; grid-column: 1 / -1; padding: 20px;">Erreur lors du chargement des offres.</div>';
+  }
+}
+
+async function declineTrade(tradeId, userId) {
+  if (!confirm('Voulez-vous vraiment annuler / refuser cet échange ?')) return;
+  try {
+    const res = await fetch('/trade/decline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tradeId, userId })
+    });
+    if (res.ok) {
+      loadTrades(userId);
+    } else {
+      const err = await res.json();
+      alert('Erreur: ' + err.error);
+    }
+  } catch (err) {
+    alert('Erreur réseau');
+  }
 }
 
 async function logout() {

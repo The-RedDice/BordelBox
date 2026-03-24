@@ -368,6 +368,58 @@ function ensureInventoryExists(userId) {
   if (!stats[userId]) return;
   if (!stats[userId].inventory) stats[userId].inventory = {};
   if (stats[userId].lootboxes === undefined) stats[userId].lootboxes = 0;
+
+  // Migration for old IDs
+  const idMap = {
+    'T_NOOB': 'T_NOVICE',
+    'T_BOSS': 'T_TUEUR_BOSS',
+    'T_KING': 'T_ROI_BORDEL',
+    'T_GOD': 'T_DIEU',
+    'C_RED': 'C_ROUGE_SANG',
+    'C_BLUE': 'C_BLEU_OCEAN',
+    'C_GOLD': 'C_OR_PUR',
+    'C_NEON': 'C_NEON_ROSE',
+    'C_RAINBOW': 'C_DEG_ARC_EN_CIEL',
+    'C_FIRE': 'C_DEG_FEU',
+    'B_SMILE': 'B_SOURIRE',
+    'B_STAR': 'B_ETOILE',
+    'B_DIAMOND': 'B_DIAMANT',
+    'B_CROWN': 'B_COURONNE',
+    'B_SKULL': 'B_CRANE_DORE',
+    'J_SMALL': 'J_PETIT_SAC',
+    'J_MEDIUM': 'J_GRAND_SAC',
+    'J_LARGE': 'J_LINGOT',
+    'J_MEGA': 'J_TICKET_OR'
+  };
+
+  let migrated = false;
+
+  // Migrate inventory items
+  for (const [oldId, newId] of Object.entries(idMap)) {
+    if (stats[userId].inventory[oldId]) {
+      stats[userId].inventory[newId] = (stats[userId].inventory[newId] || 0) + stats[userId].inventory[oldId];
+      delete stats[userId].inventory[oldId];
+      migrated = true;
+    }
+  }
+
+  // Migrate equipped items
+  if (stats[userId].equippedTitle && idMap[stats[userId].equippedTitle]) {
+    stats[userId].equippedTitle = idMap[stats[userId].equippedTitle];
+    migrated = true;
+  }
+  if (stats[userId].equippedBadge && idMap[stats[userId].equippedBadge]) {
+    stats[userId].equippedBadge = idMap[stats[userId].equippedBadge];
+    migrated = true;
+  }
+  if (stats[userId].equippedColor && idMap[stats[userId].equippedColor]) {
+    stats[userId].equippedColor = idMap[stats[userId].equippedColor];
+    migrated = true;
+  }
+
+  if (migrated) {
+    saveStats();
+  }
 }
 
 function addLootbox(userId, amount = 1) {
