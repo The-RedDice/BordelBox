@@ -2,97 +2,149 @@
   "titles": {
     "T_NOVICE": {
       "name": "Le Novice",
-      "rarity": "commun"
+      "rarity": "commun",
+      "description": "Vous commencez tout juste l'aventure.",
+      "howToObtain": "Palier de collection 10% (ou Lootbox Commun)"
     },
     "T_SAGE": {
       "name": "L'Érudit",
-      "rarity": "commun"
+      "rarity": "commun",
+      "description": "La connaissance s'accumule.",
+      "howToObtain": "Lootbox Commun"
     },
     "T_MERCENAIRE": {
       "name": "Le Mercenaire",
-      "rarity": "commun"
+      "rarity": "commun",
+      "description": "Prêt à tout pour des BordelCoins.",
+      "howToObtain": "Lootbox Commun"
     },
     "T_PRO": {
       "name": "Le Pro",
-      "rarity": "rare"
+      "rarity": "rare",
+      "description": "Vous maîtrisez les bases.",
+      "howToObtain": "Palier de collection 25% (ou Lootbox Rare)"
     },
     "T_VETERAN": {
       "name": "Le Vétéran",
-      "rarity": "rare"
+      "rarity": "rare",
+      "description": "Un habitué de la BordelBox.",
+      "howToObtain": "Lootbox Rare"
     },
     "T_MAITRE": {
       "name": "Le Maître",
-      "rarity": "rare"
+      "rarity": "rare",
+      "description": "Personne ne vous égale.",
+      "howToObtain": "Lootbox Rare"
     },
     "T_TUEUR_BOSS": {
       "name": "Tueur de Boss",
-      "rarity": "epique"
+      "rarity": "epique",
+      "description": "Vaincre l'invaincu.",
+      "howToObtain": "Tuer un Event Boss"
     },
     "T_CHAMPION": {
       "name": "Le Champion",
-      "rarity": "epique"
+      "rarity": "epique",
+      "description": "Le meilleur parmi les siens.",
+      "howToObtain": "Palier de collection 50% (ou Lootbox Epique)"
     },
     "T_EXILE": {
       "name": "L'Exilé",
-      "rarity": "epique"
+      "rarity": "epique",
+      "description": "Banni, mais puissant.",
+      "howToObtain": "Lootbox Epique"
     },
     "T_ROI_BORDEL": {
       "name": "Roi du Bordel",
-      "rarity": "legendaire"
+      "rarity": "legendaire",
+      "description": "Gouverner la BordelBox.",
+      "howToObtain": "Palier de collection 75% (ou Lootbox Légendaire)"
     },
     "T_HEROS": {
       "name": "Héros Légendaire",
-      "rarity": "legendaire"
+      "rarity": "legendaire",
+      "description": "Une légende vivante.",
+      "howToObtain": "Lootbox Légendaire"
     },
     "T_ARCHIMAGE": {
       "name": "L'Archimage",
-      "rarity": "legendaire"
+      "rarity": "legendaire",
+      "description": "Maîtrise absolue.",
+      "howToObtain": "Lootbox Légendaire"
     },
     "T_DIEU": {
       "name": "Le Dieu",
-      "rarity": "mythique"
+      "rarity": "mythique",
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_ANOMALIE": {
       "name": "L'Anomalie",
-      "rarity": "mythique"
+      "rarity": "mythique",
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_CREATEUR": {
       "name": "Le Créateur",
-      "rarity": "mythique"
+      "rarity": "mythique",
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_DAILY_14": {
       "name": "L'Assidu",
       "rarity": "legendaire",
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_COLL_25": {
       "name": "Collectionneur Débutant",
       "rarity": "rare",
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_COLL_50": {
       "name": "Amateur d'Art",
       "rarity": "epique",
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_COLL_75": {
       "name": "Conservateur",
       "rarity": "legendaire",
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_COLL_100": {
       "name": "Maitre de l'Univers",
       "rarity": "mythique",
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_LUCKY": {
       "name": "Le Chanceux",
       "rarity": "epique",
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
     },
     "T_MASTER_FISHER": {
       "name": "Maitre Pêcheur",
       "rarity": "legendaire",
+      "untradeable": true,
+      "description": "Un titre honorifique.",
+      "howToObtain": "Trouvable dans les lootboxes ou événements."
+    },
+    "T_JACKPOT": {
+      "name": "L'Homme aux 777",
+      "rarity": "mythique",
+      "description": "A fait sauter la banque de la machine à sous.",
+      "howToObtain": "Gagner 3 Jackpots de suite à la Machine à sous (/slots).",
+      "secret": true,
       "untradeable": true
     }
   },
@@ -183,68 +235,90 @@
       "name": "Sourire (+1%)",
       "rarity": "commun",
       "emoji": "🙂",
-      "bonus": 0.01
+      "bonus": 0.01,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_FEUILLE": {
       "name": "Feuille (+2%)",
       "rarity": "commun",
       "emoji": "🍃",
-      "bonus": 0.02
+      "bonus": 0.02,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_ETOILE": {
       "name": "Étoile (+5%)",
       "rarity": "rare",
       "emoji": "⭐",
-      "bonus": 0.05
+      "bonus": 0.05,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_BOUCLIER": {
       "name": "Bouclier (+6%)",
       "rarity": "rare",
       "emoji": "🛡️",
-      "bonus": 0.06
+      "bonus": 0.06,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_DIAMANT": {
       "name": "Diamant (+10%)",
       "rarity": "epique",
       "emoji": "💎",
-      "bonus": 0.1
+      "bonus": 0.1,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_ECLAIR": {
       "name": "Éclair (+12%)",
       "rarity": "epique",
       "emoji": "⚡",
-      "bonus": 0.12
+      "bonus": 0.12,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_COURONNE": {
       "name": "Couronne (+20%)",
       "rarity": "legendaire",
       "emoji": "👑",
-      "bonus": 0.2
+      "bonus": 0.2,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_TROU_NOIR": {
       "name": "Trou Noir (+25%)",
       "rarity": "legendaire",
       "emoji": "🌌",
-      "bonus": 0.25
+      "bonus": 0.25,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_CRANE_DORE": {
       "name": "Crâne Doré (+40%)",
       "rarity": "mythique",
       "emoji": "💀✨",
-      "bonus": 0.4
+      "bonus": 0.4,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_OEIL_DIVIN": {
       "name": "Œil Divin (+50%)",
       "rarity": "mythique",
       "emoji": "👁️✨",
-      "bonus": 0.5
+      "bonus": 0.5,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     },
     "B_JACKPOT": {
       "name": "Chanceux (+2%)",
       "rarity": "rare",
       "emoji": "🎰",
       "bonus": 0.02,
-      "untradeable": true
+      "untradeable": true,
+      "description": "Un badge unique.",
+      "howToObtain": "Trouvable dans les lootboxes."
     }
   },
   "jackpots": {
