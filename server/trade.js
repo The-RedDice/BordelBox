@@ -135,10 +135,21 @@ function getTrade(tradeId) {
   return trades.get(tradeId) || null;
 }
 
+function getPendingTrades(userId) {
+  const pending = [];
+  for (const trade of trades.values()) {
+    if (trade.status === 'pending' && (trade.senderId === userId || trade.receiverId === userId)) {
+      pending.push(trade);
+    }
+  }
+  return pending;
+}
+
 module.exports = {
   createTradeRequest,
   updateTradeOffer,
   acceptTrade,
   declineTrade,
-  getTrade
+  getTrade,
+  getPendingTrades
 };
