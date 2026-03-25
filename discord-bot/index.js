@@ -1778,9 +1778,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         if (subCmd === 'catch') {
           const bait = interaction.options.getString('appat', true);
+
+          // Animation start
+          const animEmbed = new EmbedBuilder()
+            .setTitle('🎣 Pêche')
+            .setColor('#3498db')
+            .setDescription('🎣 Tu lances ta ligne avec ton appât...');
+          await interaction.editReply({ embeds: [animEmbed] });
+          await new Promise(r => setTimeout(r, 1200));
+
+          animEmbed.setDescription('🎣 ... ça mord ?');
+          await interaction.editReply({ embeds: [animEmbed] });
+          await new Promise(r => setTimeout(r, 1200));
+
+          animEmbed.setDescription('🎣 ÇA MORD !!!');
+          await interaction.editReply({ embeds: [animEmbed] });
+          await new Promise(r => setTimeout(r, 1000));
+
           const res = await apiPost('/fish', { userId, bait });
           if (!res || res.error) {
-            await interaction.editReply('🎣 ' + (res?.error || 'Erreur lors de la pêche.'));
+            await interaction.editReply({ content: '🎣 ' + (res?.error || 'Erreur lors de la pêche.'), embeds: [] });
             break;
           }
 
@@ -1828,26 +1845,44 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const bet = interaction.options.getInteger('mise');
         const res = await apiPost('/slots', { userId: interaction.user.id, amount: bet });
         if (!res || res.error) {
-          await interaction.editReply('🎰 ' + (res?.error || 'Erreur de machine à sous.'));
+          await interaction.editReply({ content: '🎰 ' + (res?.error || 'Erreur de machine à sous.'), embeds: [] });
           break;
         }
 
-        let desc = 'Mise : ' + bet + ' 💰\n\n' +
-                   '╔════════════╗\n' +
-                   '║  ' + res.result.join(' | ') + '  ║\n' +
-                   '╚════════════╝\n\n';
-
-        if (res.winAmount > 0) {
-           desc += '🎉 **Gagné ! ' + res.winAmount + ' BordelCoins !**';
-           if (res.isJackpot) desc += ' \n🎰 **JACKPOT !!!!**';
-        } else {
-           desc += '😢 Perdu.';
-        }
+        const buildDesc = (r1, r2, r3, finalMessage = '') => {
+            return `Mise : ${bet} 💰\n\n╔════════════╗\n║  ${r1} | ${r2} | ${r3}  ║\n╚════════════╝\n\n${finalMessage}`;
+        };
 
         const embed = new EmbedBuilder()
           .setTitle('🎰 Machine à Sous')
-          .setColor(res.winAmount > 0 ? '#f1c40f' : '#e74c3c')
-          .setDescription(desc);
+          .setColor('#95a5a6');
+
+        // Animation Frame 1
+        embed.setDescription(buildDesc('🔄', '🔄', '🔄', '*Les rouleaux tournent...*'));
+        await interaction.editReply({ embeds: [embed] });
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Animation Frame 2
+        embed.setDescription(buildDesc(res.result[0], '🔄', '🔄', '*Les rouleaux tournent...*'));
+        await interaction.editReply({ embeds: [embed] });
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Animation Frame 3
+        embed.setDescription(buildDesc(res.result[0], res.result[1], '🔄', '*Les rouleaux tournent...*'));
+        await interaction.editReply({ embeds: [embed] });
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Final Frame
+        let finalMessage = '';
+        if (res.winAmount > 0) {
+           finalMessage = '🎉 **Gagné ! ' + res.winAmount + ' BordelCoins !**';
+           if (res.isJackpot) finalMessage += ' \n🎰 **JACKPOT !!!!**';
+        } else {
+           finalMessage = '😢 Perdu.';
+        }
+
+        embed.setColor(res.winAmount > 0 ? '#f1c40f' : '#e74c3c')
+             .setDescription(buildDesc(res.result[0], res.result[1], res.result[2], finalMessage));
 
         await interaction.editReply({ embeds: [embed] });
         break;
