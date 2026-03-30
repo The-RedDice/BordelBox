@@ -520,10 +520,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
              .setDescription(resumeMsg);
 
 
-           const targetOptions = stateRes.alivePlayers.map(pId => ({
-               label: pId === stateRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : `Tirer sur un adversaire`,
-               value: pId,
-               description: pId === stateRes.turnPlayer ? 'Risqué mais récompense d\'un tour' : 'Éliminer une menace'
+           // We need the actual display name. We can fetch it or just use the ping format which doesn't work in select menus.
+           // In select menus, <@id> is literally text. We must resolve the user object if possible.
+           // Since we can't reliably async-fetch all users in the map, we can rely on interaction.guild.members.cache
+           // or just use generic text with the ID if we don't have it.
+           // Let's try to fetch members if possible, or fallback to "Joueur".
+           const targetOptions = await Promise.all(stateRes.alivePlayers.map(async pId => {
+               let displayName = 'Joueur inconnu';
+               try {
+                   const member = await interaction.guild.members.fetch(pId);
+                   displayName = member ? (member.displayName || member.user.username) : pId;
+               } catch(e) { displayName = pId; }
+
+               const lives = stateRes.playerLives[pId] || 0;
+               const livesText = '🩷'.repeat(lives);
+
+               return {
+                   label: pId === stateRes.turnPlayer ? `[TOI] ${displayName} (${livesText})` : `${displayName} (${livesText})`,
+                   value: pId,
+                   description: pId === stateRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : 'Tirer sur cet adversaire'
+               };
            }));
 
            const selectMenu = new StringSelectMenuBuilder()
@@ -682,10 +698,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
                return;
            }
 
-           const targetOptions = stateRes.alivePlayers.map(pId => ({
-               label: pId === stateRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : `Tirer sur un adversaire`,
-               value: pId,
-               description: pId === stateRes.turnPlayer ? 'Risqué mais récompense d\'un tour' : 'Éliminer une menace'
+           // We need the actual display name. We can fetch it or just use the ping format which doesn't work in select menus.
+           // In select menus, <@id> is literally text. We must resolve the user object if possible.
+           // Since we can't reliably async-fetch all users in the map, we can rely on interaction.guild.members.cache
+           // or just use generic text with the ID if we don't have it.
+           // Let's try to fetch members if possible, or fallback to "Joueur".
+           const targetOptions = await Promise.all(stateRes.alivePlayers.map(async pId => {
+               let displayName = 'Joueur inconnu';
+               try {
+                   const member = await interaction.guild.members.fetch(pId);
+                   displayName = member ? (member.displayName || member.user.username) : pId;
+               } catch(e) { displayName = pId; }
+
+               const lives = stateRes.playerLives[pId] || 0;
+               const livesText = '🩷'.repeat(lives);
+
+               return {
+                   label: pId === stateRes.turnPlayer ? `[TOI] ${displayName} (${livesText})` : `${displayName} (${livesText})`,
+                   value: pId,
+                   description: pId === stateRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : 'Tirer sur cet adversaire'
+               };
            }));
 
            const selectMenu = new StringSelectMenuBuilder()
@@ -2212,10 +2244,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
              .setDescription(gameMsg);
 
            // On génère le menu de ciblage
-           const targetOptions = players.map(pId => ({
-               label: pId === startRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : `Tirer sur un adversaire`,
-               value: pId,
-               description: pId === startRes.turnPlayer ? 'Risqué mais récompense d\'un tour' : 'Éliminer une menace'
+           const targetOptions = await Promise.all(players.map(async pId => {
+               let displayName = 'Joueur inconnu';
+               try {
+                   const member = await interaction.guild.members.fetch(pId);
+                   displayName = member ? (member.displayName || member.user.username) : pId;
+               } catch(e) { displayName = pId; }
+
+               const livesText = '🩷'.repeat(startRes.startingLives);
+
+               return {
+                   label: pId === startRes.turnPlayer ? `[TOI] ${displayName} (${livesText})` : `${displayName} (${livesText})`,
+                   value: pId,
+                   description: pId === startRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : 'Tirer sur cet adversaire'
+               };
            }));
 
            // Discord limit to 25 choices
