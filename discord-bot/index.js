@@ -504,12 +504,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
          }
          resumeMsg += `C'est au tour de <@${res.nextPlayer}> de jouer.`;
 
+         const stateRes = await apiGet(`/roulette/state?rouletteId=${rouletteId}`);
+         if (stateRes && stateRes.playerLives) {
+             resumeMsg += '\n\n**Vies restantes :**\n';
+             for (const [p, lives] of Object.entries(stateRes.playerLives)) {
+                if (stateRes.alivePlayers.includes(p)) {
+                   resumeMsg += `- <@${p}> : ${'🩷'.repeat(lives)}\n`;
+                }
+             }
+         }
+
          const turnEmbed = new EmbedBuilder()
              .setTitle('🔫 La partie reprend')
              .setColor('#e74c3c')
              .setDescription(resumeMsg);
 
-           const stateRes = await apiGet(`/roulette/state?rouletteId=${rouletteId}`);
 
            const targetOptions = stateRes.alivePlayers.map(pId => ({
                label: pId === stateRes.turnPlayer ? 'Me tirer dessus (Rejoue si ⚪)' : `Tirer sur un adversaire`,
@@ -585,8 +594,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         let resultMsg = `<@${userId}> pointe le fusil sur ${isSelf ? '**LUI-MÊME**' : `<@${targetId}>`} et presse la détente...\n\n`;
 
+        const victimLivesRemaining = shootRes.victimLivesRemaining || 0;
         if (isLive) {
-            resultMsg += `💥 **BAM ! C'était une vraie balle 🔴 !**\n<@${targetId}> s'effondre.\n`;
+            resultMsg += `💥 **BAM ! C'était une vraie balle 🔴 !**\n`;
+            if (victimDied) {
+               if (isSelf) {
+                  resultMsg += `<@${userId}> s'effondre.\n`;
+               } else {
+                  resultMsg += `<@${targetId}> s'effondre.\n`;
+               }
+            } else {
+               if (isSelf) {
+                  resultMsg += `<@${userId}> perd une vie ! (Reste ${victimLivesRemaining} 🩷)\n`;
+               } else {
+                  resultMsg += `<@${targetId}> perd une vie ! (Reste ${victimLivesRemaining} 🩷)\n`;
+               }
+            }
         } else {
             resultMsg += `*Clic.* **C'était une balle à blanc ⚪.**\n`;
             if (isSelf) {
@@ -634,6 +657,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
            nextTurnMsg += `C'est au tour de <@${shootRes.nextPlayer}> de jouer.`;
 
+           const stateRes = await apiGet(`/roulette/state?rouletteId=${rouletteId}`);
+           if (stateRes && stateRes.playerLives) {
+               nextTurnMsg += '\n\n**Vies restantes :**\n';
+               for (const [p, lives] of Object.entries(stateRes.playerLives)) {
+                  if (stateRes.alivePlayers.includes(p)) {
+                     nextTurnMsg += `- <@${p}> : ${'🩷'.repeat(lives)}\n`;
+                  }
+               }
+           }
+
            const turnEmbed = new EmbedBuilder()
              .setTitle('🔫 Tour Suivant')
              .setColor('#e74c3c')
@@ -643,7 +676,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
            // To get current players we either need to fetch state or we know it's in shootRes?
            // I didn't return alive players in shootRes for playing state except 'nextPlayer'. I need the whole list.
            // Let's fetch it from server.
-           const stateRes = await apiGet(`/roulette/state?rouletteId=${rouletteId}`);
 
            if (!stateRes || stateRes.error) {
                await interaction.followUp('Erreur de synchro.');
@@ -2165,9 +2197,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
            const players = startRes.players;
 
-           let gameMsg = `La partie de Buckshot commence avec **${players.length} joueurs** !\n\n`;
+           let gameMsg = `La partie de Buckshot commence avec **${players.length} joueurs** !\nChaque joueur a **${startRes.startingLives} vie(s)** 🩷.\n\n`;
            gameMsg += `Le fusil est chargé : **${startRes.liveCount} 🔴** (Vraies) et **${startRes.blankCount} ⚪** (Blanches).\nL'ordre des balles est inconnu.\n\n`;
            gameMsg += `C'est au tour de <@${startRes.turnPlayer}> de jouer.`;
+
+           gameMsg += '\n\n**Vies restantes :**\n';
+           for (const p of startRes.players) {
+              gameMsg += `- <@${p}> : ${'🩷'.repeat(startRes.startingLives)}\n`;
+           }
 
            const turnEmbed = new EmbedBuilder()
              .setTitle('🔫 Tour de Jeu')

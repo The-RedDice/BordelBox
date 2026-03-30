@@ -1315,7 +1315,8 @@ function createRoulette(userId, amount) {
     createdAt: Date.now(),
     state: 'waiting', // waiting, playing, proposing_draw
     drawVotes: new Set(),
-    alivePlayers: [], // populated when game starts
+    alivePlayers: [],
+    playerLives: {},
     currentTurnIndex: 0,
     magazine: [] // true = live, false = blank
   });
@@ -1384,6 +1385,16 @@ function startRoulette(rouletteId) {
   }
 
   roulette.state = 'playing';
+  // Determine lives based on player count
+  let startingLives = 1;
+  if (roulette.players.length === 2) startingLives = 3;
+  else if (roulette.players.length <= 4) startingLives = 2;
+
+  roulette.playerLives = {};
+  for (const p of roulette.players) {
+      roulette.playerLives[p] = startingLives;
+  }
+
   // Shuffle player order
   roulette.alivePlayers = [...roulette.players].sort(() => Math.random() - 0.5);
   roulette.currentTurnIndex = 0;
@@ -1395,7 +1406,8 @@ function startRoulette(rouletteId) {
      players: roulette.alivePlayers,
      turnPlayer: roulette.alivePlayers[0],
      liveCount: magStats.liveCount,
-     blankCount: magStats.blankCount
+     blankCount: magStats.blankCount,
+     startingLives: startingLives
   };
 }
 
@@ -1419,15 +1431,22 @@ function shootRoulette(rouletteId, shooterId, targetId) {
   let victimDied = false;
   let keepTurn = false;
 
+  let victimLivesRemaining = roulette.playerLives[targetId] || 0;
+
   if (isLive) {
      // BOOM
-     victimDied = true;
-     const victimIndex = roulette.alivePlayers.indexOf(targetId);
-     roulette.alivePlayers.splice(victimIndex, 1);
+     victimLivesRemaining--;
+     roulette.playerLives[targetId] = victimLivesRemaining;
 
-     // Adjust turn index if someone before the current player (or the player themselves) died
-     if (victimIndex <= roulette.currentTurnIndex) {
-         roulette.currentTurnIndex--;
+     if (victimLivesRemaining <= 0) {
+         victimDied = true;
+         const victimIndex = roulette.alivePlayers.indexOf(targetId);
+         roulette.alivePlayers.splice(victimIndex, 1);
+
+         // Adjust turn index if someone before the current player (or the player themselves) died
+         if (victimIndex <= roulette.currentTurnIndex) {
+             roulette.currentTurnIndex--;
+         }
      }
   } else {
      // CLICK
@@ -1575,6 +1594,7 @@ function getRouletteState(rouletteId) {
        state: roulette.state,
        alivePlayers: roulette.alivePlayers,
        turnPlayer: roulette.alivePlayers[roulette.currentTurnIndex],
+       playerLives: roulette.playerLives,
        liveCount: roulette.magazine.filter(b => b).length,
        blankCount: roulette.magazine.filter(b => !b).length
    };
