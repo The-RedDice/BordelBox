@@ -708,7 +708,7 @@ function setupDrawCanvas() {
 
       // Upload silently to get a URL
       try {
-        const res = await fetch('/upload', { // Same route used for general uploads (multer)
+        const res = await fetch('/api/draw/upload', {
           method: 'POST',
           body: formData
         });
@@ -735,22 +735,28 @@ function setupDrawCanvas() {
   // Resize canvas to match container exactly
   const resizeCanvas = () => {
     const container = document.getElementById('draw-canvas-container');
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    if (container.clientWidth > 0) {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
   };
   window.addEventListener('resize', resizeCanvas);
-  resizeCanvas(); // initial
+
+  // We need to resize when the tab becomes visible, so we expose it
+  window.resizeDrawCanvas = resizeCanvas;
 
   // Mouse / Touch events
   const startDraw = (e) => {
     if (!document.getElementById('draw-workspace').style.display || document.getElementById('draw-workspace').style.display === 'none') return;
 
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
     const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
     const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
-    const normX = x / canvas.width;
-    const normY = y / canvas.height;
+    const normX = x / rect.width;
+    const normY = y / rect.height;
 
     if (currentTool === 'brush') {
       isDrawing = true;
@@ -768,21 +774,23 @@ function setupDrawCanvas() {
     e.preventDefault(); // prevent scrolling on touch
 
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
     const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
     const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
-    const normX = x / canvas.width;
-    const normY = y / canvas.height;
+    const normX = x / rect.width;
+    const normY = y / rect.height;
 
     const color = document.getElementById('draw-color').value;
     const size = parseInt(document.getElementById('draw-size').value, 10);
 
     // Draw locally for immediate feedback
     drawCanvasCtx.beginPath();
-    drawCanvasCtx.moveTo(lastX * canvas.width, lastY * canvas.height);
-    drawCanvasCtx.lineTo(normX * canvas.width, normY * canvas.height);
+    drawCanvasCtx.moveTo(lastX * rect.width, lastY * rect.height);
+    drawCanvasCtx.lineTo(normX * rect.width, normY * rect.height);
     drawCanvasCtx.strokeStyle = color;
-    drawCanvasCtx.lineWidth = size * (canvas.width / 1920); // rough scale
+    drawCanvasCtx.lineWidth = size * (rect.width / 1920); // rough scale
     drawCanvasCtx.lineCap = 'round';
     drawCanvasCtx.stroke();
 
@@ -846,12 +854,10 @@ async function checkDrawState() {
       actionEl.style.display = 'none';
       workspaceEl.style.display = 'block';
 
+      if (window.resizeDrawCanvas) window.resizeDrawCanvas();
+
       const timeLeft = Math.max(0, Math.floor((state.endTime - Date.now()) / 1000));
       updateDrawTimer(timeLeft);
-
-      // Also reset our local canvas just to be clean if it wasn't already
-      // but we shouldn't wipe it constantly if we're just checking state
-
     } else {
       const now = Date.now();
       if (now < state.cooldownEndTime) {
@@ -940,12 +946,15 @@ function placeText(normX, normY) {
 
   // Draw locally
   const canvas = document.getElementById('dashboard-draw-canvas');
-  const pxSize = size * (canvas.width / 1920);
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) return;
+
+  const pxSize = size * (rect.width / 1920);
   drawCanvasCtx.font = `bold ${pxSize}px Arial`;
   drawCanvasCtx.fillStyle = color;
   drawCanvasCtx.textAlign = 'center';
   drawCanvasCtx.textBaseline = 'middle';
-  drawCanvasCtx.fillText(text, normX * canvas.width, normY * canvas.height);
+  drawCanvasCtx.fillText(text, normX * rect.width, normY * rect.height);
 
   // Emit to server
   if (socket) {
@@ -973,12 +982,15 @@ function placeImage(normX, normY) {
 
   // Local preview draw
   const canvas = document.getElementById('dashboard-draw-canvas');
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) return;
+
   const img = new Image();
   img.onload = () => {
-    const drawW = sizePct * canvas.width;
+    const drawW = sizePct * rect.width;
     const ratio = img.height / img.width;
     const drawH = drawW * ratio;
-    drawCanvasCtx.drawImage(img, (normX * canvas.width) - (drawW / 2), (normY * canvas.height) - (drawH / 2), drawW, drawH);
+    drawCanvasCtx.drawImage(img, (normX * rect.width) - (drawW / 2), (normY * rect.height) - (drawH / 2), drawW, drawH);
   };
   img.src = drawImageUrl;
 
