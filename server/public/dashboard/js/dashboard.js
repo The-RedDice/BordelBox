@@ -708,7 +708,7 @@ function setupDrawCanvas() {
 
       // Upload silently to get a URL
       try {
-        const res = await fetch('/upload', { // Same route used for general uploads (multer)
+        const res = await fetch('/api/draw/upload', {
           method: 'POST',
           body: formData
         });

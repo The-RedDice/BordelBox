@@ -1458,6 +1458,17 @@ router.post('/draw/start', requireAuth, (req, res) => {
   res.json({ ok: true, state });
 });
 
+// POST /api/draw/upload
+router.post('/draw/upload', requireAuth, uploadMiddleware.single('file'), (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: 'Aucun fichier uploadé.' });
+  }
+
+  const fileUrl = `${SERVER_URL}/media/${file.filename}`;
+  res.json({ ok: true, fileUrl });
+});
+
 // GET /api/event/:eventId
 router.get('/event/:eventId', (req, res) => {
   const event = getEventById(req.params.eventId);
