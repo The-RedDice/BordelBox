@@ -13,7 +13,8 @@ const io = require('socket.io-client');
 
 // ─── Config ──────────────────────────────────────────────
 
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
+const PORT       = process.env.PORT || 3000;
+const SERVER_URL = process.env.SERVER_URL || `http://localhost:${PORT}`;
 const TOKEN      = process.env.DISCORD_TOKEN;
 const REPUTATION_CHANNEL_ID = process.env.REPUTATION_CHANNEL_ID;
 
