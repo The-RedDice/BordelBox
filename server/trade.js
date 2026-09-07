@@ -1,4 +1,4 @@
-const { getInventory, addItemToInventory, removeItemFromInventory, addCoins, spendCoins, getItemsDb } = require('./stats');
+const { getInventory, addItemToInventory, removeItemFromInventory, addCoins, spendCoins, getItemsDb, getUserStats } = require('./stats');
 
 // trades in-memory: { tradeId: { senderId, receiverId, senderOffer: { items: [], coins: 0 }, receiverOffer: { items: [], coins: 0 }, status: 'pending' } }
 const trades = new Map();
@@ -71,8 +71,13 @@ function updateTradeOffer(tradeId, userId, offerItems, offerCoins) {
     tempInv[itemId]--;
   }
 
-  // TODO: Validate coins (need to check user stats directly or pass it)
-  // For simplicity, assuming the caller has verified coin balance or will verify at accept.
+  if (offerCoins > 0) {
+    const userStats = getUserStats(userId);
+    const userCoins = userStats.bordelCoins ?? userStats.coins ?? userStats.reputation ?? 0;
+    if (userCoins < offerCoins) {
+      return { error: `Vous n'avez pas assez de BordelCoins (${userCoins} disponibles).` };
+    }
+  }
 
   if (isSender) {
     trade.senderOffer = { items: offerItems, coins: offerCoins };
